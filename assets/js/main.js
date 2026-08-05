@@ -69,3 +69,38 @@ document.querySelectorAll('[data-current-year]').forEach(el => {
   el.textContent = new Date().getFullYear();
 });
 
+
+
+// ── Count-up animation for numeric snapshot values
+const animatedNumbers = document.querySelectorAll('.snapshot-value');
+const countObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting || entry.target.dataset.animated === 'true') return;
+
+    const element = entry.target;
+    const raw = element.textContent.trim();
+    const match = raw.match(/^(\d+)(\+)?$/);
+
+    if (!match) {
+      element.dataset.animated = 'true';
+      return;
+    }
+
+    const target = Number(match[1]);
+    const suffix = match[2] || '';
+    const duration = 700;
+    const start = performance.now();
+
+    const update = now => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      element.textContent = `${Math.round(target * eased)}${suffix}`;
+      if (progress < 1) requestAnimationFrame(update);
+      else element.dataset.animated = 'true';
+    };
+
+    requestAnimationFrame(update);
+  });
+}, { threshold: 0.45 });
+
+animatedNumbers.forEach(number => countObserver.observe(number));
