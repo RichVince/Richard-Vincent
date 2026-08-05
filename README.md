@@ -2,7 +2,7 @@
 
 Cybersecurity and Governance, Risk & Compliance professional website.
 
-## Version 3.3
+## Version 4.0
 - External CSS and JavaScript structure
 - Responsive mobile navigation
 - Recruiter quick-access bar
@@ -30,3 +30,13 @@ Upload the contents of this folder to the root of the GitHub repository.
 - Increased spacing and breathing room
 - More consistent text color hierarchy
 - Reduced visual weight and excessive boldness
+
+
+### Executive Edition
+- Simplified executive hero
+- Three-panel professional snapshot
+- Professional philosophy section
+- Core capabilities framed as business outcomes
+- Refined navigation
+- Executive recruiter call-to-action
+- Reduced visual noise and stronger hierarchy
