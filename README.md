@@ -2,7 +2,7 @@
 
 Cybersecurity and Governance, Risk & Compliance professional website.
 
-## Version 3.1
+## Version 3.2
 - External CSS and JavaScript structure
 - Responsive mobile navigation
 - Recruiter quick-access bar
@@ -10,6 +10,10 @@ Cybersecurity and Governance, Risk & Compliance professional website.
 - Business-value statements on featured case studies
 - Accessibility improvements
 - Dynamic copyright year
+- Trusted knowledge strip
+- Flagship featured engagement
+- Career journey timeline
+- Animated professional metrics
 
 ## Local preview
 Open `index.html` in a browser or use the VS Code Live Server extension.
