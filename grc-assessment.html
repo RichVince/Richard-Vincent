@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI GRC Assessment Assistant | Richard Vincent</title>
+<meta name="description" content="Portfolio-ready AI-assisted GRC readiness report generator. Upload evidence documents, answer intake questions, and generate a draft security posture report with findings, risk ratings, framework mapping, and remediation priorities."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050914;
+  --surface: rgba(13,24,42,0.92);
+  --surface-2: rgba(18,32,54,0.88);
+  --text: #f0f5fc;
+  --muted: #aebbd0;
+  --muted-2: #6e7f96;
+  --accent: #55c7ff;
+  --accent-2: #9fe7ff;
+  --gold: #e7c873;
+  --gold-dim: rgba(231,200,115,0.15);
+  --success: #8df2b0;
+  --warning: #ffd166;
+  --danger: #ff8b94;
+  --border: rgba(255,255,255,0.08);
+  --border-accent: rgba(159,231,255,0.22);
+  --serif: "IBM Plex Serif", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --r-card: 20px;
+  --r-btn: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{font-family:var(--sans);color:var(--text);background:#050914;min-height:100vh;line-height:1.6;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 15% 10%,rgba(85,199,255,0.10),transparent 32rem),radial-gradient(circle at 85% 80%,rgba(231,200,115,0.07),transparent 28rem);z-index:0;}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,rgba(0,0,0,0.5),transparent 60%);z-index:0;}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 32px;
+  min-height:62px;
+  border-bottom:1px solid var(--border);
+  background:rgba(5,9,20,0.85);
+  backdrop-filter:blur(16px);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.95rem;}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent-2),var(--gold));display:grid;place-items:center;color:#04101f;font-size:0.72rem;font-weight:800;}
+.topbar-right{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;}
+.badge{padding:4px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;}
+.badge-ai{background:rgba(85,199,255,0.1);border:1px solid rgba(85,199,255,0.2);color:var(--accent-2);}
+.badge-warn{background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);color:var(--warning);}
+
+.main{flex:1;padding:0;}
+
+/* STEP SYSTEM */
+.step-view{display:none;animation:fadein 0.3s ease;}
+.step-view.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* PROGRESS BAR */
+.progress-bar{height:3px;background:rgba(255,255,255,0.06);position:relative;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:0 99px 99px 0;transition:width 0.4s ease;}
+.step-indicators{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:18px 24px;
+  border-bottom:1px solid var(--border);
+  overflow-x:hidden;
+}
+.step-ind{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:0.78rem;
+  color:var(--muted-2);
+  white-space:nowrap;
+}
+.step-ind.done{color:var(--success);}
+.step-ind.active{color:var(--accent-2);font-weight:700;}
+.step-dot{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:1px solid currentColor;
+  display:grid;
+  place-items:center;
+  font-size:0.65rem;
+  font-weight:700;
+  flex-shrink:0;
+}
+.step-ind.done .step-dot{background:rgba(141,242,176,0.1);}
+.step-ind.active .step-dot{background:rgba(85,199,255,0.1);}
+.step-sep{
+  width:22px;
+  height:1px;
+  background:var(--border);
+  flex-shrink:0;
+}
+
+/* PAGE SECTIONS */
+.page{max-width:760px;margin:0 auto;padding:40px 24px 80px;}
+.page-wide{max-width:1040px;margin:0 auto;padding:40px 24px 80px;}
+
+/* HERO / LANDING */
+.hero-section{max-width:820px;margin:0 auto;padding:64px 24px 0;text-align:center;}
+.hero-section h1{font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.4rem);line-height:1.05;letter-spacing:-0.03em;margin-bottom:16px;}
+.grad{background:linear-gradient(135deg,var(--text),var(--accent-2) 50%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-section p{color:var(--muted);font-size:1.04rem;line-height:1.75;max-width:600px;margin:0 auto 32px;}
+.workflow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;margin:32px auto 40px;max-width:680px;}
+.wf-step{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 18px;}
+.wf-icon{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:grid;place-items:center;font-size:1.1rem;}
+.wf-label{font-size:0.72rem;color:var(--muted-2);text-align:center;max-width:72px;line-height:1.4;}
+.wf-arrow{color:var(--muted-2);font-size:1rem;padding:0 4px;margin-top:-14px;}
+.disclaimer-box{margin:0 auto 40px;max-width:600px;padding:14px 18px;border:1px solid rgba(231,200,115,0.2);border-radius:14px;background:rgba(231,200,115,0.05);color:var(--muted);font-size:0.86rem;line-height:1.6;}
+.disclaimer-box strong{color:var(--gold);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:var(--r-btn);border:1px solid transparent;font-size:0.92rem;font-weight:700;cursor:pointer;transition:0.18s ease;font-family:var(--sans);}
+.btn-primary{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#04101f;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(85,199,255,0.2);}
+.btn-ghost{background:rgba(255,255,255,0.05);border-color:var(--border-accent);color:var(--text);}
+.btn-ghost:hover{background:rgba(255,255,255,0.09);transform:translateY(-1px);}
+.btn-danger{background:rgba(255,139,148,0.1);border-color:rgba(255,139,148,0.2);color:var(--danger);}
+.btn-lg{padding:15px 30px;font-size:1rem;border-radius:14px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none !important;}
+
+/* SECTION TITLES */
+.section-label{font-family:var(--mono);font-size:0.7rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:block;}
+.section-title{font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.4rem);letter-spacing:-0.03em;line-height:1.1;margin-bottom:12px;}
+.section-intro{color:var(--muted);font-size:0.96rem;line-height:1.72;margin-bottom:28px;}
+
+/* INTAKE FORM */
+.intake-grid{display:grid;gap:14px;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.field label{font-size:0.84rem;font-weight:600;color:var(--text);}
+.field .hint{font-size:0.76rem;color:var(--muted-2);}
+.field input,.field select,.field textarea{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:var(--sans);font-size:0.92rem;padding:11px 14px;transition:0.15s;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--border-accent);background:rgba(85,199,255,0.04);}
+.field select option{background:#0d1827;color:var(--text);}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.check-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:0.15s;background:rgba(255,255,255,0.02);}
+.check-item:hover{border-color:var(--border-accent);background:rgba(85,199,255,0.04);}
+.check-item input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
+.check-item span{font-size:0.84rem;color:var(--muted);}
+
+
+/* ASSESSMENT MODES + SECURITY NOTE */
+.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 22px;}
+.mode-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,0.03);cursor:pointer;transition:0.18s;}
+.mode-card:hover{border-color:var(--border-accent);background:rgba(85,199,255,0.04);}
+.mode-card input{position:absolute;opacity:0;pointer-events:none;}
+.mode-card:has(input:checked){border-color:rgba(159,231,255,0.42);background:rgba(85,199,255,0.08);}
+.mode-card strong{font-size:0.88rem;color:var(--text);}
+.mode-card span{font-size:0.76rem;color:var(--muted);line-height:1.45;}
+.security-note{margin:16px 0 0;padding:14px 16px;border:1px solid rgba(85,199,255,0.17);border-radius:13px;background:rgba(85,199,255,0.045);font-size:0.84rem;color:var(--muted);line-height:1.62;}
+.security-note strong{color:var(--accent-2);}
+.security-note code{font-family:var(--mono);color:var(--accent-2);}
+@media(max-width:700px){.mode-grid{grid-template-columns:1fr;}}
+
+/* FILE UPLOAD */
+.upload-zone{border:2px dashed rgba(159,231,255,0.18);border-radius:var(--r-card);padding:28px;text-align:center;cursor:pointer;transition:0.2s;background:rgba(85,199,255,0.02);}
+.upload-zone:hover,.upload-zone.drag-over{border-color:rgba(159,231,255,0.4);background:rgba(85,199,255,0.05);}
+.upload-zone .up-icon{font-size:2rem;margin-bottom:10px;display:block;}
+.upload-zone p{color:var(--muted);font-size:0.88rem;}
+.upload-zone strong{color:var(--accent-2);}
+#file-input{display:none;}
+.file-list{display:grid;gap:8px;margin-top:14px;}
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,0.03);}
+.file-item .file-icon{font-size:1.1rem;flex-shrink:0;}
+.file-item .file-name{flex:1;font-size:0.84rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-item .file-size{font-size:0.75rem;color:var(--muted-2);font-family:var(--mono);flex-shrink:0;}
+.file-item .file-remove{cursor:pointer;color:var(--muted-2);font-size:0.9rem;padding:2px 6px;border-radius:6px;transition:0.15s;background:none;border:none;color:var(--danger);}
+.file-item .file-remove:hover{background:rgba(255,139,148,0.1);}
+.reading-indicator{display:none;align-items:center;gap:8px;padding:10px 13px;border:1px solid rgba(85,199,255,0.15);border-radius:11px;background:rgba(85,199,255,0.05);font-size:0.84rem;color:var(--accent-2);margin-top:8px;}
+.reading-indicator.show{display:flex;}
+.spin{animation:spin 1s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* CARD */
+.card{border:1px solid var(--border);border-radius:var(--r-card);background:linear-gradient(180deg,var(--surface),rgba(8,18,33,0.7));padding:24px;}
+.card+.card{margin-top:14px;}
+
+/* ANALYSIS / LOADING */
+.analysis-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 24px;}
+.analysis-screen h2{font-family:var(--serif);font-size:1.8rem;letter-spacing:-0.02em;margin-bottom:12px;}
+.analysis-screen p{color:var(--muted);max-width:460px;line-height:1.7;}
+.progress-ring{width:80px;height:80px;margin:0 auto 28px;}
+.progress-ring circle{fill:none;stroke-width:4;}
+.ring-bg{stroke:rgba(255,255,255,0.07);}
+.ring-fill{stroke:var(--accent-2);stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;animation:ring-anim 2.5s ease forwards;}
+@keyframes ring-anim{to{stroke-dashoffset:22;}}
+.analysis-steps{display:grid;gap:8px;margin-top:24px;text-align:left;max-width:380px;width:100%;}
+.a-step{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:0.84rem;color:var(--muted-2);transition:0.3s;}
+.a-step.done{color:var(--success);background:rgba(141,242,176,0.05);}
+.a-step.active{color:var(--accent-2);background:rgba(85,199,255,0.05);}
+.a-step-icon{width:18px;text-align:center;flex-shrink:0;}
+
+/* REPORT STYLES */
+.report-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.report-topbar h2{font-family:var(--serif);font-size:1.5rem;letter-spacing:-0.02em;}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.report-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.meta-card{padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,0.03);}
+.meta-card span{display:block;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-2);margin-bottom:4px;font-family:var(--mono);}
+.meta-card strong{font-size:0.92rem;color:var(--text);}
+.report-section{margin-bottom:32px;}
+.report-section h3{font-family:var(--serif);font-size:1.3rem;letter-spacing:-0.02em;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.report-body-text{color:var(--muted);font-size:0.94rem;line-height:1.78;}
+.report-body-text p{margin-bottom:14px;}
+.report-body-text p:last-child{margin-bottom:0;}
+.report-body-text strong{color:var(--text);}
+.finding-block{margin-bottom:14px;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.finding-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,0.03);}
+.finding-id{font-family:var(--mono);font-size:0.72rem;color:var(--muted-2);}
+.finding-title{flex:1;font-weight:600;font-size:0.93rem;}
+.risk-badge{padding:3px 9px;border-radius:999px;font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0;}
+.risk-high{background:rgba(255,139,148,0.12);border:1px solid rgba(255,139,148,0.2);color:var(--danger);}
+.risk-med{background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);color:var(--warning);}
+.risk-low{background:rgba(141,242,176,0.1);border:1px solid rgba(141,242,176,0.18);color:var(--success);}
+.risk-info{background:rgba(85,199,255,0.1);border:1px solid rgba(85,199,255,0.18);color:var(--accent-2);}
+.finding-body{padding:14px 16px;}
+.finding-body p{color:var(--muted);font-size:0.88rem;line-height:1.7;margin-bottom:8px;}
+.finding-body p:last-child{margin-bottom:0;}
+.finding-label{font-size:0.67rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-2);font-family:var(--mono);margin-bottom:3px;display:block;}
+.fw-tag{display:inline-flex;padding:3px 8px;border-radius:7px;background:rgba(231,200,115,0.08);border:1px solid rgba(231,200,115,0.16);color:var(--gold);font-size:0.7rem;font-weight:600;font-family:var(--mono);margin:2px;}
+.rec-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:start;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.88rem;}
+.rec-row:last-child{border-bottom:0;}
+.rec-text{color:var(--muted);}
+.rec-text strong{color:var(--text);display:block;margin-bottom:3px;}
+.pri-pill{padding:3px 9px;border-radius:8px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.pri-imm{background:rgba(255,139,148,0.12);color:var(--danger);}
+.pri-30{background:rgba(255,209,102,0.1);color:var(--warning);}
+.pri-90{background:rgba(141,242,176,0.1);color:var(--success);}
+.owner-tag{font-size:0.76rem;color:var(--muted-2);font-family:var(--mono);white-space:nowrap;}
+.exec-summary-box{padding:20px 24px;border-left:3px solid var(--accent-2);border-radius:0 14px 14px 0;background:rgba(85,199,255,0.05);margin-bottom:20px;}
+.exec-summary-box p{color:var(--muted);font-size:0.94rem;line-height:1.78;}
+.stream-cursor{display:inline-block;width:2px;height:1em;background:var(--accent-2);margin-left:2px;animation:blink 0.9s step-end infinite;vertical-align:text-bottom;}
+@keyframes blink{50%{opacity:0;}}
+.maturity-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.maturity-row:last-child{border-bottom:0;}
+.m-label{width:200px;flex-shrink:0;font-size:0.84rem;color:var(--muted);}
+.m-bar{flex:1;height:5px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;}
+.m-fill{height:100%;border-radius:99px;transition:width 1s ease;}
+.m-fill.red{background:linear-gradient(90deg,rgba(255,139,148,0.5),var(--danger));}
+.m-fill.amber{background:linear-gradient(90deg,rgba(255,209,102,0.5),var(--warning));}
+.m-fill.green{background:linear-gradient(90deg,rgba(141,242,176,0.5),var(--success));}
+.m-score{width:36px;text-align:right;font-size:0.76rem;font-family:var(--mono);color:var(--muted-2);}
+.roadmap-col{padding:16px;border:1px solid var(--border);border-radius:14px;}
+.roadmap-col h4{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;font-family:var(--mono);}
+.roadmap-col.imm h4{color:var(--danger);}
+.roadmap-col.d30 h4{color:var(--warning);}
+.roadmap-col.d90 h4{color:var(--success);}
+.roadmap-item{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.83rem;color:var(--muted);}
+.roadmap-item:last-child{border-bottom:0;}
+.roadmap-item::before{content:"›";color:inherit;font-weight:700;flex-shrink:0;margin-top:1px;}
+.roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.fw-map-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.86rem;}
+.fw-map-row:last-child{border-bottom:0;}
+.fw-map-finding{flex:1;color:var(--muted);}
+.fw-map-tags{display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;justify-content:flex-end;max-width:240px;}
+.error-banner{padding:14px 18px;border:1px solid rgba(255,139,148,0.2);border-radius:12px;background:rgba(255,139,148,0.07);color:var(--danger);font-size:0.88rem;margin-bottom:16px;display:none;}
+.error-banner.show{display:block;}
+
+/* NAV FOOTER */
+.step-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-top:1px solid var(--border);background:rgba(5,9,20,0.7);backdrop-filter:blur(12px);position:sticky;bottom:0;z-index:50;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:12px;background:rgba(18,32,54,0.95);border:1px solid var(--border-accent);color:var(--text);font-size:0.88rem;box-shadow:0 16px 40px rgba(0,0,0,0.4);transform:translateY(80px);opacity:0;transition:0.3s;z-index:999;}
+.toast.show{transform:none;opacity:1;}
+
+@media(max-width:700px){
+  .two-col,.check-grid,.report-meta,.roadmap-grid{grid-template-columns:1fr;}
+  .topbar{padding:14px 16px;align-items:flex-start;flex-direction:column;}
+  .topbar-right{justify-content:flex-start;}
+  .badge{font-size:0.62rem;padding:4px 8px;}
+  .page,.page-wide{padding:28px 16px 80px;}
+  .step-indicators{padding:14px 12px;justify-content:flex-start;gap:8px;}
+  .step-ind{font-size:0.72rem;}
+  .step-sep{display:none;}
+  .rec-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">RV</div>
+    <span>AI GRC Assessment Assistant</span>
+  </div>
+  <div class="topbar-right">
+    <span class="badge badge-ai">AI-Assisted</span>
+    <span class="badge badge-warn">Draft Only — Human Review Required</span>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+<div class="step-indicators" id="step-indicators">
+  <div class="step-ind active" data-step="0"><div class="step-dot">1</div><span>Overview</span></div>
+  <div class="step-sep"></div>
+  <div class="step-ind" data-step="1"><div class="step-dot">2</div><span>Company Profile</span></div>
+  <div class="step-sep"></div>
+  <div class="step-ind" data-step="2"><div class="step-dot">3</div><span>Upload Evidence</span></div>
+  <div class="step-sep"></div>
+  <div class="step-ind" data-step="3"><div class="step-dot">4</div><span>Security Questions</span></div>
+  <div class="step-sep"></div>
+  <div class="step-ind" data-step="4"><div class="step-dot">5</div><span>Analysis</span></div>
+  <div class="step-sep"></div>
+  <div class="step-ind" data-step="5"><div class="step-dot">6</div><span>Report</span></div>
+</div>
+
+<!-- ===== STEP 0: LANDING ===== -->
+<div class="step-view active" id="step-0">
+  <div class="hero-section">
+    <h1>AI-Assisted <span class="grad">GRC Assessment</span> Assistant</h1>
+    <p>Upload read-only evidence, answer a short intake questionnaire, and generate a structured draft security posture report with findings, risk ratings, framework mapping, and remediation priorities.</p>
+    <div class="workflow">
+      <div class="wf-step"><div class="wf-icon">📁</div><div class="wf-label">Upload evidence</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">📋</div><div class="wf-label">Answer questions</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">🤖</div><div class="wf-label">AI analysis</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">📊</div><div class="wf-label">GRC report</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step"><div class="wf-icon">👤</div><div class="wf-label">Human review</div></div>
+    </div>
+    <div class="disclaimer-box">
+      <strong>Important:</strong> This tool produces AI-assisted draft reports only. It does not certify compliance, replace an auditor, or provide legal advice. All findings, risk ratings, and recommendations must be validated by a qualified GRC professional before delivery to any client.
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="goTo(1)">Start Assessment →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 1: COMPANY PROFILE ===== -->
+<div class="step-view" id="step-1">
+  <div class="page">
+    <span class="section-label">Step 1 of 4</span>
+    <h2 class="section-title">Company Profile</h2>
+    <p class="section-intro">Basic information about the client organization. This shapes the risk context and framework applicability of the report.</p>
+
+    <div class="intake-grid">
+      <div class="two-col">
+        <div class="field">
+          <label>Organization Name *</label>
+          <input type="text" id="org-name" placeholder="e.g. Meridian Consulting Group"/>
+        </div>
+        <div class="field">
+          <label>Industry / Sector *</label>
+          <select id="org-industry">
+            <option value="">Select industry…</option>
+            <option>Professional Services</option>
+            <option>Healthcare</option>
+            <option>Finance / Banking</option>
+            <option>Retail / E-commerce</option>
+            <option>Technology / SaaS</option>
+            <option>Manufacturing</option>
+            <option>Education</option>
+            <option>Government / Public Sector</option>
+            <option>Non-Profit</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Number of Employees</label>
+          <select id="org-size">
+            <option value="">Select size…</option>
+            <option>1–10</option>
+            <option>11–50</option>
+            <option>51–200</option>
+            <option>201–500</option>
+            <option>500+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Primary Technology Environment</label>
+          <select id="org-tech">
+            <option value="">Select environment…</option>
+            <option>Microsoft 365 / Azure</option>
+            <option>Google Workspace</option>
+            <option>AWS</option>
+            <option>On-premises / Hybrid</option>
+            <option>Mixed cloud</option>
+            <option>Unknown / Not documented</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Dedicated IT / Security Staff?</label>
+        <select id="org-it">
+          <option value="">Select…</option>
+          <option>No dedicated IT or security staff</option>
+          <option>Part-time / shared IT resource</option>
+          <option>Managed Service Provider (MSP) only</option>
+          <option>In-house IT team, no dedicated security</option>
+          <option>Dedicated IT and security team</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Assessment Purpose</label>
+        <select id="org-purpose">
+          <option value="">Select…</option>
+          <option>General security posture review</option>
+          <option>Audit readiness / compliance preparation</option>
+          <option>Following an incident or near-miss</option>
+          <option>New client / onboarding review</option>
+          <option>Periodic scheduled review</option>
+          <option>Regulatory requirement</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Applicable Frameworks / Compliance Requirements</label>
+        <span class="hint">Select all that apply</span>
+        <div class="check-grid" style="margin-top:6px;">
+          <label class="check-item"><input type="checkbox" name="framework" value="NIST CSF 2.0"/><span>NIST CSF 2.0</span></label>
+          <label class="check-item"><input type="checkbox" name="framework" value="ISO 27001:2022"/><span>ISO 27001:2022</span></label>
+          <label class="check-item"><input type="checkbox" name="framework" value="CIS Controls v8"/><span>CIS Controls v8</span></label>
+          <label class="check-item"><input type="checkbox" name="framework" value="SOC 2"/><span>SOC 2</span></label>
+          <label class="check-item"><input type="checkbox" name="framework" value="PCI DSS"/><span>PCI DSS</span></label>
+          <label class="check-item"><input type="checkbox" name="framework" value="HIPAA"/><span>HIPAA</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Assessment Output Mode</label>
+        <span class="hint">Choose the primary report style. You can still include other sections in the final report.</span>
+        <div class="mode-grid">
+          <label class="mode-card">
+            <input type="radio" name="assessment-mode" value="Executive Posture Report" checked />
+            <strong>Executive</strong>
+            <span>Board-ready summary, top risks, and roadmap.</span>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="assessment-mode" value="Audit Findings Report" />
+            <strong>Audit</strong>
+            <span>Findings, evidence gaps, and framework citations.</span>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="assessment-mode" value="Risk Register" />
+            <strong>Risk</strong>
+            <span>Risk register, owners, severity, and treatment plan.</span>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="assessment-mode" value="Compliance Readiness Report" />
+            <strong>Compliance</strong>
+            <span>NIST, ISO, CIS, SOC 2, or PCI readiness view.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Additional Context <span style="color:var(--muted-2);font-weight:400;">(optional)</span></label>
+        <textarea id="org-context" placeholder="Any known concerns, recent incidents, specific focus areas, or relevant background…"></textarea>
+      </div>
+    </div>
+
+    <div class="error-banner" id="step1-error">Please fill in the required fields: Organization Name and Industry.</div>
+  </div>
+  <div class="step-nav">
+    <button class="btn btn-ghost" onclick="goTo(0)">← Back</button>
+    <button class="btn btn-primary" onclick="validateStep1()">Next: Upload Evidence →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 2: FILE UPLOAD ===== -->
+<div class="step-view" id="step-2">
+  <div class="page">
+    <span class="section-label">Step 2 of 4</span>
+    <h2 class="section-title">Upload Evidence Documents</h2>
+    <p class="section-intro">Upload any available security documentation. The AI will extract relevant information from each file. Upload what you have — missing documents will be flagged as control gaps.</p>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-2);font-family:var(--mono);margin-bottom:10px;">Suggested Evidence Types</div>
+      <div class="check-grid">
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">📄 Security policies</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">📋 Asset inventory</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">👥 Access review exports</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">🔍 Vulnerability scan reports</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">🏢 Vendor list</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">🚨 Incident response plan</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">💾 Backup/logging evidence</div>
+        <div style="padding:7px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:0.82rem;color:var(--muted);">📊 Security questionnaire</div>
+      </div>
+    </div>
+
+    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <span class="up-icon">📁</span>
+      <p><strong>Click to upload</strong> or drag and drop files here</p>
+      <p style="margin-top:6px;font-size:0.78rem;color:var(--muted-2);">PDF, DOCX, TXT, CSV — up to 10MB per file</p>
+    </div>
+    <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt,.csv,.xlsx,.doc" onchange="handleFiles(this.files)"/>
+    <div class="file-list" id="file-list"></div>
+    <div class="reading-indicator" id="reading-indicator"><span class="spin">⟳</span> Reading file contents…</div>
+
+    <div style="margin-top:18px;padding:12px 16px;border:1px solid rgba(255,209,102,0.16);border-radius:12px;background:rgba(255,209,102,0.04);font-size:0.84rem;color:var(--muted);">
+      <strong style="color:var(--warning);">No files?</strong> You can skip this step and the AI will base its assessment entirely on your questionnaire answers — noting all missing evidence as control gaps.
+    </div>
+
+    <div class="security-note">
+      <strong>Security design:</strong> This front-end should not call OpenAI, Anthropic, or any AI provider directly from the browser.
+      In production, evidence should be sent to a secure backend endpoint such as <code>/api/grc-assessment</code>, where API keys are protected,
+      file handling can be logged, and retention rules can be enforced.
+    </div>
+  </div>
+  <div class="step-nav">
+    <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Next: Security Questions →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 3: QUESTIONNAIRE ===== -->
+<div class="step-view" id="step-3">
+  <div class="page">
+    <span class="section-label">Step 3 of 4</span>
+    <h2 class="section-title">Security Questionnaire</h2>
+    <p class="section-intro">Answer as accurately as possible. "Partial" or "Unknown" are valid answers — they become findings. The AI uses these responses to fill gaps not covered by uploaded documents.</p>
+
+    <div class="intake-grid">
+
+      <div class="card">
+        <div class="section-label" style="margin-bottom:12px;">Access Control & Identity</div>
+        <div class="intake-grid">
+          <div class="field">
+            <label>Is multi-factor authentication (MFA) enforced for all users?</label>
+            <select id="q-mfa"><option value="">Select…</option><option>Yes — all users</option><option>Partial — admin accounts only</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Is there a formal offboarding process that includes access revocation?</label>
+            <select id="q-offboard"><option value="">Select…</option><option>Yes — documented and followed</option><option>Yes — informal process exists</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Are access reviews conducted periodically?</label>
+            <select id="q-accessreview"><option value="">Select…</option><option>Yes — quarterly or more frequent</option><option>Yes — annually</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Are shared or generic accounts in use?</label>
+            <select id="q-shared"><option value="">Select…</option><option>No shared accounts</option><option>Yes — for some systems</option><option>Yes — widely used</option><option>Unknown</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label" style="margin-bottom:12px;">Logging & Monitoring</div>
+        <div class="intake-grid">
+          <div class="field">
+            <label>Is security event logging enabled across systems?</label>
+            <select id="q-logging"><option value="">Select…</option><option>Yes — comprehensive coverage</option><option>Partial — some systems</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Are security alerts or notifications configured?</label>
+            <select id="q-alerts"><option value="">Select…</option><option>Yes — alerts reviewed regularly</option><option>Yes — configured but not reviewed</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>How long are logs retained?</label>
+            <select id="q-retention"><option value="">Select…</option><option>12+ months</option><option>6–12 months</option><option>Under 90 days</option><option>No retention policy</option><option>Unknown</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label" style="margin-bottom:12px;">Data Protection & Backup</div>
+        <div class="intake-grid">
+          <div class="field">
+            <label>Are backups tested / restoration verified?</label>
+            <select id="q-backup"><option value="">Select…</option><option>Yes — tested regularly (quarterly+)</option><option>Yes — tested occasionally</option><option>Backups exist but never tested</option><option>No backups</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Is data encrypted at rest on endpoints?</label>
+            <select id="q-encrypt"><option value="">Select…</option><option>Yes — all devices</option><option>Partial</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Does a data classification policy exist?</label>
+            <select id="q-classify"><option value="">Select…</option><option>Yes — documented and followed</option><option>Informal classification only</option><option>No</option><option>Unknown</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label" style="margin-bottom:12px;">Vulnerability & Patch Management</div>
+        <div class="intake-grid">
+          <div class="field">
+            <label>How frequently are systems patched?</label>
+            <select id="q-patching"><option value="">Select…</option><option>Within 14 days of release</option><option>Monthly</option><option>Quarterly or less frequent</option><option>Ad hoc / no schedule</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Is a complete hardware/software asset inventory maintained?</label>
+            <select id="q-inventory"><option value="">Select…</option><option>Yes — current and accurate</option><option>Partially documented</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Are any end-of-life (EOL) systems in use?</label>
+            <select id="q-eol"><option value="">Select…</option><option>No known EOL systems</option><option>Yes — some</option><option>Yes — significant exposure</option><option>Unknown</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label" style="margin-bottom:12px;">Governance & Policy</div>
+        <div class="intake-grid">
+          <div class="field">
+            <label>Does a formal information security policy exist?</label>
+            <select id="q-policy"><option value="">Select…</option><option>Yes — documented, reviewed annually</option><option>Yes — outdated / not reviewed</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Is security awareness training provided to staff?</label>
+            <select id="q-training"><option value="">Select…</option><option>Yes — annual training with records</option><option>Yes — informal / ad hoc</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Is there a documented incident response plan?</label>
+            <select id="q-irplan"><option value="">Select…</option><option>Yes — documented and tested</option><option>Yes — documented but untested</option><option>No</option><option>Unknown</option></select>
+          </div>
+          <div class="field">
+            <label>Are third-party vendors with system access subject to security requirements?</label>
+            <select id="q-vendor"><option value="">Select…</option><option>Yes — formal vendor risk program</option><option>Partially — some vendors reviewed</option><option>No</option><option>Unknown</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Additional observations or context for the AI analyst <span style="color:var(--muted-2);font-weight:400;">(optional)</span></label>
+        <textarea id="q-notes" placeholder="Any recent incidents, known concerns, specific risks you want highlighted, or context the AI should consider…" style="min-height:100px;"></textarea>
+      </div>
+    </div>
+
+    <div class="error-banner" id="step3-error">Please answer at least the key questions before generating the report.</div>
+  </div>
+  <div class="step-nav">
+    <button class="btn btn-ghost" onclick="goTo(2)">← Back</button>
+    <button class="btn btn-primary" onclick="validateStep3()">Generate Report →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 4: ANALYSIS ===== -->
+<div class="step-view" id="step-4">
+  <div class="analysis-screen">
+    <svg class="progress-ring" viewBox="0 0 80 80">
+      <circle class="ring-bg" cx="40" cy="40" r="35"/>
+      <circle class="ring-fill" cx="40" cy="40" r="35" id="ring-circle" transform="rotate(-90 40 40)"/>
+    </svg>
+    <h2>Analyzing Evidence</h2>
+    <p>The AI is reviewing your documents and questionnaire responses to identify control gaps, assess risk, and map findings to frameworks.</p>
+    <div class="analysis-steps" id="analysis-steps">
+      <div class="a-step active" id="as-1"><span class="a-step-icon">⟳</span> Reading uploaded evidence</div>
+      <div class="a-step" id="as-2"><span class="a-step-icon">○</span> Extracting risk indicators</div>
+      <div class="a-step" id="as-3"><span class="a-step-icon">○</span> Mapping to frameworks (NIST / ISO / CIS)</div>
+      <div class="a-step" id="as-4"><span class="a-step-icon">○</span> Assigning risk ratings</div>
+      <div class="a-step" id="as-5"><span class="a-step-icon">○</span> Generating remediation roadmap</div>
+      <div class="a-step" id="as-6"><span class="a-step-icon">○</span> Drafting executive summary</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STEP 5: REPORT ===== -->
+<div class="step-view" id="step-5">
+  <div class="page-wide">
+    <div class="report-topbar">
+      <div>
+        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted-2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">AI-Assisted Draft · Human Review Required</div>
+        <h2>GRC Security Posture Report</h2>
+      </div>
+      <div class="report-actions">
+        <button class="btn btn-ghost" onclick="window.print()">🖨 Print / Save PDF</button>
+        <button class="btn btn-ghost" onclick="startOver()">↺ New Assessment</button>
+      </div>
+    </div>
+
+    <div class="report-meta" id="report-meta"></div>
+    <div id="report-content"></div>
+
+    <div style="margin-top:32px;padding:16px 20px;border:1px solid rgba(231,200,115,0.18);border-radius:14px;background:rgba(231,200,115,0.05);">
+      <strong style="color:var(--gold);font-size:0.84rem;">Analyst Review Required</strong>
+      <p style="color:var(--muted);font-size:0.84rem;margin-top:6px;line-height:1.6;">This report was generated with AI assistance and must be reviewed by a qualified GRC professional before delivery. Verify all findings against source evidence, adjust risk ratings as appropriate, and remove or modify any outputs that do not reflect the actual client environment.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== IMPLEMENTATION NOTES ===== -->
+<!--
+PRODUCTION IMPLEMENTATION NOTES
+
+This page is portfolio-ready as a front-end prototype. For real client use:
+1. Do not call OpenAI, Anthropic, or any AI provider directly from browser JavaScript.
+2. Create a secure backend route such as /api/grc-assessment.
+3. Store API keys only in server-side environment variables.
+4. Add authentication before allowing real client uploads.
+5. Add file size limits, file type validation, malware scanning, and retention rules.
+6. Add a privacy notice and client consent language.
+7. Log only metadata needed for troubleshooting; avoid storing sensitive evidence unnecessarily.
+8. Keep the human-review requirement in every generated report.
+
+Example backend response:
+{
+  "report": {
+    "reportTitle": "GRC Security Posture Report",
+    "orgName": "Client Name",
+    "overallRisk": "High",
+    "executiveSummary": "...",
+    "findings": [],
+    "controlMaturity": [],
+    "remediationRoadmap": {},
+    "frameworkMapping": [],
+    "analystNotes": "..."
+  }
+}
+-->
+
+</div><!-- end .app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let currentStep = 0;
+let uploadedFiles = [];
+let fileContents = [];
+let reportData = {};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(step) {
+  document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('step-' + step).classList.add('active');
+  document.querySelectorAll('.step-ind').forEach((ind, i) => {
+    ind.classList.remove('active', 'done');
+    if (i < step) ind.classList.add('done');
+    if (i === step) ind.classList.add('active');
+  });
+  const pct = (step / 5) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  currentStep = step;
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// VALIDATION
+// ============================================================
+function validateStep1() {
+  const name = document.getElementById('org-name').value.trim();
+  const ind = document.getElementById('org-industry').value;
+  const err = document.getElementById('step1-error');
+  if (!name || !ind) { err.classList.add('show'); return; }
+  err.classList.remove('show');
+  goTo(2);
+}
+
+function validateStep3() {
+  const answered = ['q-mfa','q-logging','q-backup','q-patching','q-policy']
+    .filter(id => document.getElementById(id).value !== '');
+  if (answered.length < 3) {
+    document.getElementById('step3-error').classList.add('show');
+    return;
+  }
+  document.getElementById('step3-error').classList.remove('show');
+  goTo(4);
+  runAnalysis();
+}
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  const indicator = document.getElementById('reading-indicator');
+  Array.from(files).forEach(file => {
+    if (uploadedFiles.find(f => f.name === file.name)) return;
+    if (file.size > 10 * 1024 * 1024) { showToast('File too large: ' + file.name); return; }
+    uploadedFiles.push(file);
+    indicator.classList.add('show');
+    readFileContent(file).then(content => {
+      fileContents.push({ name: file.name, content: content });
+      indicator.classList.remove('show');
+      renderFileList();
+    });
+  });
+  renderFileList();
+}
+
+function readFileContent(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => resolve('[Could not read file: ' + file.name + ']');
+    if (file.type === 'application/pdf') {
+      resolve('[PDF uploaded: ' + file.name + ' — ' + (file.size/1024).toFixed(0) + 'KB. PDF text extraction requires backend/server-side processing in production; this prototype treats the file as evidence of document existence.]');
+    } else {
+      reader.readAsText(file);
+    }
+  });
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = uploadedFiles.map((f, i) => `
+    <div class="file-item">
+      <span class="file-icon">${fileIcon(f.name)}</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${(f.size/1024).toFixed(0)}KB</span>
+      <button class="file-remove" onclick="removeFile(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function fileIcon(name) {
+  if (name.endsWith('.pdf')) return '📄';
+  if (name.endsWith('.csv') || name.endsWith('.xlsx')) return '📊';
+  if (name.endsWith('.docx') || name.endsWith('.doc')) return '📝';
+  return '📃';
+}
+
+function removeFile(i) {
+  uploadedFiles.splice(i, 1);
+  fileContents.splice(i, 1);
+  renderFileList();
+}
+
+// ============================================================
+// BUILD PROMPT
+// ============================================================
+function buildPrompt() {
+  const org = document.getElementById('org-name').value.trim();
+  const industry = document.getElementById('org-industry').value;
+  const size = document.getElementById('org-size').value;
+  const tech = document.getElementById('org-tech').value;
+  const itStaff = document.getElementById('org-it').value;
+  const purpose = document.getElementById('org-purpose').value;
+  const context = document.getElementById('org-context').value.trim();
+  const frameworks = Array.from(document.querySelectorAll('input[name="framework"]:checked')).map(c => c.value).join(', ') || 'NIST CSF 2.0, ISO 27001:2022, CIS Controls v8';
+  const assessmentMode = document.querySelector('input[name="assessment-mode"]:checked')?.value || 'Executive Posture Report';
+
+  const qa = {
+    'MFA enforcement': document.getElementById('q-mfa').value,
+    'Offboarding process': document.getElementById('q-offboard').value,
+    'Access reviews': document.getElementById('q-accessreview').value,
+    'Shared accounts': document.getElementById('q-shared').value,
+    'Security logging': document.getElementById('q-logging').value,
+    'Security alerts': document.getElementById('q-alerts').value,
+    'Log retention': document.getElementById('q-retention').value,
+    'Backup testing': document.getElementById('q-backup').value,
+    'Encryption at rest': document.getElementById('q-encrypt').value,
+    'Data classification': document.getElementById('q-classify').value,
+    'Patching frequency': document.getElementById('q-patching').value,
+    'Asset inventory': document.getElementById('q-inventory').value,
+    'EOL systems': document.getElementById('q-eol').value,
+    'Security policy': document.getElementById('q-policy').value,
+    'Security awareness training': document.getElementById('q-training').value,
+    'Incident response plan': document.getElementById('q-irplan').value,
+    'Vendor risk management': document.getElementById('q-vendor').value,
+    'Additional notes': document.getElementById('q-notes').value,
+  };
+
+  const qLines = Object.entries(qa).filter(([k,v]) => v).map(([k,v]) => `- ${k}: ${v}`).join('\n');
+  const fileSection = fileContents.length > 0
+    ? '\n\nUPLOADED EVIDENCE DOCUMENTS:\n' + fileContents.map(f => `\n--- ${f.name} ---\n${f.content.slice(0, 3000)}`).join('\n')
+    : '\n\nNo documents uploaded. Base assessment entirely on questionnaire responses. Note all missing evidence types as control gaps.';
+
+  return `You are a senior GRC analyst producing an AI-assisted security posture report. This is a DRAFT that will be reviewed by a human professional before delivery.
+
+CLIENT PROFILE:
+- Organization: ${org}
+- Industry: ${industry}
+- Size: ${size}
+- Technology: ${tech}
+- IT/Security Staff: ${itStaff}
+- Assessment Purpose: ${purpose}
+- Applicable Frameworks: ${frameworks}\n- Requested Output Mode: ${assessmentMode}
+${context ? '- Additional Context: ' + context : ''}
+
+QUESTIONNAIRE RESPONSES:
+${qLines}
+${fileSection}
+
+Produce a structured GRC Security Posture Report in valid JSON. Tailor emphasis to the requested output mode while still including the full required JSON structure. Return ONLY the JSON object — no markdown, no explanation, no code fences. The JSON must match this exact structure:
+
+{
+  "reportTitle": "GRC Security Posture Report",
+  "orgName": "...",
+  "reportDate": "...",
+  "overallRisk": "High|Medium|Low",
+  "executiveSummary": "3-4 sentence plain-language summary of overall posture, top risks, and priority actions for leadership.",
+  "companyProfile": {
+    "industry": "...",
+    "size": "...",
+    "technology": "...",
+    "itStaff": "...",
+    "frameworks": "..."
+  },
+  "findings": [
+    {
+      "id": "F-001",
+      "title": "...",
+      "domain": "Access Control|Logging & Monitoring|Data Protection|Vulnerability Management|Governance",
+      "riskRating": "High|Medium|Low",
+      "observation": "...",
+      "risk": "...",
+      "frameworks": ["ISO 27001 A.X.X", "NIST CSF XX.XX", "CIS Control X"]
+    }
+  ],
+  "controlMaturity": [
+    { "area": "Access Control & Identity", "score": 0.0, "color": "red|amber|green" },
+    { "area": "Logging & Monitoring", "score": 0.0, "color": "red|amber|green" },
+    { "area": "Data Protection & Backup", "score": 0.0, "color": "red|amber|green" },
+    { "area": "Vulnerability Management", "score": 0.0, "color": "red|amber|green" },
+    { "area": "Governance & Policy", "score": 0.0, "color": "red|amber|green" }
+  ],
+  "remediationRoadmap": {
+    "immediate": [
+      { "action": "...", "owner": "...", "finding": "F-00X" }
+    ],
+    "thirtyDays": [
+      { "action": "...", "owner": "...", "finding": "F-00X" }
+    ],
+    "ninetyDays": [
+      { "action": "...", "owner": "...", "finding": "F-00X" }
+    ]
+  },
+  "frameworkMapping": [
+    { "finding": "F-00X title summary", "tags": ["ISO 27001 A.X.X", "NIST CSF XX"] }
+  ],
+  "analystNotes": "1-2 sentences of honest qualification — what is uncertain, what needs verification, what the human reviewer should check."
+}
+
+Rules:
+- Produce 4–8 findings based on the evidence and questionnaire
+- Score control maturity 0.0–4.0 where 0=none, 1=initial, 2=developing, 3=defined, 4=optimized
+- Red = score under 1.5, Amber = 1.5–2.9, Green = 3.0+
+- Be specific and practical — name actual systems (M365, Azure AD, etc.) where mentioned
+- Mark missing evidence explicitly in findings (e.g. "No policy document was provided")
+- Only return valid JSON`;
+}
+
+// ============================================================
+// ANALYSIS + API CALL
+// ============================================================
+async function runAnalysis() {
+  const steps = ['as-1','as-2','as-3','as-4','as-5','as-6'];
+  let si = 0;
+
+  const tick = () => {
+    if (si > 0) {
+      document.getElementById(steps[si-1]).classList.remove('active');
+      document.getElementById(steps[si-1]).classList.add('done');
+      document.getElementById(steps[si-1]).querySelector('.a-step-icon').textContent = '✓';
+    }
+    if (si < steps.length) {
+      document.getElementById(steps[si]).classList.add('active');
+      document.getElementById(steps[si]).querySelector('.a-step-icon').innerHTML = '<span class="spin">⟳</span>';
+      si++;
+    }
+  };
+
+  tick();
+  const tickInterval = setInterval(tick, 1800);
+
+  try {
+    const prompt = buildPrompt();
+    const response = await fetch('/api/grc-assessment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        metadata: {
+          tool: 'AI GRC Assessment Assistant',
+          mode: document.querySelector('input[name="assessment-mode"]:checked')?.value || 'Executive Posture Report',
+          organization: document.getElementById('org-name').value.trim(),
+          generatedAt: new Date().toISOString()
+        }
+      })
+    });
+
+    clearInterval(tickInterval);
+    steps.forEach(s => {
+      document.getElementById(s).classList.remove('active');
+      document.getElementById(s).classList.add('done');
+      document.getElementById(s).querySelector('.a-step-icon').textContent = '✓';
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend endpoint unavailable or returned status ' + response.status);
+    }
+
+    const data = await response.json();
+
+    // Expected backend response options:
+    // 1. { report: { ...valid report JSON... } }
+    // 2. { text: "{...valid report JSON...}" }
+    if (data.report) {
+      reportData = data.report;
+    } else if (data.text) {
+      const clean = data.text.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+      reportData = JSON.parse(clean);
+    } else {
+      throw new Error('Invalid backend response shape');
+    }
+
+    await new Promise(r => setTimeout(r, 600));
+    renderReport(reportData);
+    goTo(5);
+
+  } catch (err) {
+    clearInterval(tickInterval);
+    console.error(err);
+    // Fallback to demo report if API fails
+    reportData = buildFallbackReport();
+    renderReport(reportData);
+    goTo(5);
+    showToast('Secure backend not connected — showing local demo report structure');
+  }
+}
+
+// ============================================================
+// FALLBACK DEMO REPORT
+// ============================================================
+function buildFallbackReport() {
+  const org = document.getElementById('org-name').value.trim() || 'Client Organization';
+  return {
+    reportTitle: "GRC Security Posture Report",
+    orgName: org,
+    reportDate: new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}),
+    overallRisk: "High",
+    executiveSummary: `${org} presents a high overall security risk based on the assessment responses provided. Critical gaps were identified in access control, security logging, and governance policy. Immediate action is required to address MFA enforcement, log coverage, and the absence of formal security policies. Without these foundational controls, the organization lacks the visibility and governance structure needed to detect, respond to, or recover from a security incident.`,
+    companyProfile: {
+      industry: document.getElementById('org-industry').value || 'Not specified',
+      size: document.getElementById('org-size').value || 'Not specified',
+      technology: document.getElementById('org-tech').value || 'Not specified',
+      itStaff: document.getElementById('org-it').value || 'Not specified',
+      frameworks: 'NIST CSF 2.0, ISO 27001:2022, CIS Controls v8'
+    },
+    findings: [
+      { id:'F-001', title:'MFA Not Enforced Organization-Wide', domain:'Access Control', riskRating:'High', observation:'Multi-factor authentication is not enforced for all users. Standard user accounts can authenticate with credentials alone.', risk:'Credential compromise is the leading cause of cloud environment breaches. Without MFA, a single phished or reused password provides full account access.', frameworks:['ISO 27001 A.8.5','NIST CSF PR.AA-03','CIS Control 6.3'] },
+      { id:'F-002', title:'Security Logging Coverage Incomplete', domain:'Logging & Monitoring', riskRating:'High', observation:'Security logging is not comprehensively configured. Key workloads or user activity streams lack audit coverage.', risk:'Without complete logging, the organization cannot detect unauthorized access, investigate incidents, or produce audit evidence demonstrating control operation.', frameworks:['ISO 27001 A.8.15','NIST CSF DE.AE-02','CIS Control 8.2'] },
+      { id:'F-003', title:'Backup Restoration Not Tested', domain:'Data Protection', riskRating:'High', observation:'Backup systems may exist but restoration has not been tested. There is no verified evidence that data can be recovered.', risk:'An untested backup is not a reliable backup. In a ransomware or data loss event, unverified backups significantly extend recovery time and may fail entirely.', frameworks:['ISO 27001 A.8.13','NIST CSF RC.RP-03','CIS Control 11.3'] },
+      { id:'F-004', title:'No Formal Information Security Policies', domain:'Governance', riskRating:'Medium', observation:'No documented information security policies were provided or indicated as existing. Security expectations are communicated informally if at all.', risk:'Without formal policies, there is no governance baseline, no standard for auditors to test against, and no defensible position if an incident results in regulatory or contractual scrutiny.', frameworks:['ISO 27001 A.5.1','NIST CSF GV.PO-01','CIS Control 0'] },
+      { id:'F-005', title:'No Incident Response Plan', domain:'Governance', riskRating:'Medium', observation:'No documented incident response plan or escalation contact list was identified.', risk:'Organizations without a response plan take significantly longer to contain incidents, extending the damage window and increasing recovery costs.', frameworks:['ISO 27001 A.5.25','NIST CSF RS.MA-01','CIS Control 17.1'] }
+    ],
+    controlMaturity: [
+      { area:'Access Control & Identity', score:1.0, color:'red' },
+      { area:'Logging & Monitoring', score:0.5, color:'red' },
+      { area:'Data Protection & Backup', score:1.5, color:'amber' },
+      { area:'Vulnerability Management', score:1.0, color:'red' },
+      { area:'Governance & Policy', score:0.5, color:'red' }
+    ],
+    remediationRoadmap: {
+      immediate: [
+        { action:'Enable and enforce MFA for all user accounts via Conditional Access', owner:'IT / MSP', finding:'F-001' },
+        { action:'Enable comprehensive audit logging across all key systems and workloads', owner:'IT / MSP', finding:'F-002' }
+      ],
+      thirtyDays: [
+        { action:'Conduct and document a backup restoration test; schedule quarterly going forward', owner:'IT / MSP', finding:'F-003' },
+        { action:'Draft and distribute a one-page Information Security Policy covering AUP, passwords, and data handling', owner:'Leadership', finding:'F-004' }
+      ],
+      ninetyDays: [
+        { action:'Develop and distribute an Incident Response Contact Sheet and basic IR procedure', owner:'Leadership + IT', finding:'F-005' },
+        { action:'Conduct a full access review and implement formal offboarding checklist', owner:'HR + IT', finding:'F-001' }
+      ]
+    },
+    frameworkMapping: [
+      { finding:'MFA Not Enforced', tags:['ISO 27001 A.8.5','NIST CSF PR.AA-03','CIS Control 6.3'] },
+      { finding:'Logging Coverage Incomplete', tags:['ISO 27001 A.8.15','NIST CSF DE.AE-02','CIS Control 8.2'] },
+      { finding:'Backup Not Tested', tags:['ISO 27001 A.8.13','NIST CSF RC.RP-03','CIS Control 11.3'] },
+      { finding:'No Security Policies', tags:['ISO 27001 A.5.1','NIST CSF GV.PO-01'] },
+      { finding:'No Incident Response Plan', tags:['ISO 27001 A.5.25','NIST CSF RS.MA-01','CIS Control 17.1'] }
+    ],
+    analystNotes: 'This report is based on questionnaire responses only — no supporting documents were uploaded. All findings should be verified against actual system configurations and documentation before delivery. Risk ratings may require adjustment based on compensating controls not captured in the intake.'
+  };
+}
+
+// ============================================================
+// RENDER REPORT
+// ============================================================
+function renderReport(d) {
+  const riskColor = d.overallRisk === 'High' ? 'var(--danger)' : d.overallRisk === 'Medium' ? 'var(--warning)' : 'var(--success)';
+
+  document.getElementById('report-meta').innerHTML = `
+    <div class="meta-card"><span>Organization</span><strong>${d.orgName}</strong></div>
+    <div class="meta-card"><span>Report Date</span><strong>${d.reportDate || new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</strong></div>
+    <div class="meta-card"><span>Overall Risk</span><strong style="color:${riskColor}">${d.overallRisk}</strong></div>
+    <div class="meta-card"><span>Findings</span><strong>${d.findings?.length || 0} documented</strong></div>
+  `;
+
+  let html = '';
+
+  // EXECUTIVE SUMMARY
+  html += `<div class="report-section">
+    <h3>Executive Summary</h3>
+    <div class="exec-summary-box"><p>${d.executiveSummary}</p></div>
+  </div>`;
+
+  // FINDINGS
+  html += `<div class="report-section"><h3>Findings</h3>`;
+  (d.findings || []).forEach(f => {
+    const rc = f.riskRating === 'High' ? 'risk-high' : f.riskRating === 'Medium' ? 'risk-med' : 'risk-low';
+    html += `<div class="finding-block">
+      <div class="finding-header">
+        <span class="finding-id">${f.id}</span>
+        <span class="finding-title">${f.title}</span>
+        <span class="risk-badge ${rc}">${f.riskRating}</span>
+      </div>
+      <div class="finding-body">
+        <span class="finding-label">Observation</span>
+        <p>${f.observation}</p>
+        <span class="finding-label" style="margin-top:10px;">Risk</span>
+        <p>${f.risk}</p>
+        <span class="finding-label" style="margin-top:10px;">Framework Citations</span>
+        <p>${(f.frameworks||[]).map(fw => `<span class="fw-tag">${fw}</span>`).join('')}</p>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // CONTROL MATURITY
+  html += `<div class="report-section"><h3>Control Maturity Assessment</h3>`;
+  html += `<div style="margin-top:10px;">`;
+  (d.controlMaturity || []).forEach(m => {
+    const pct = Math.min(100, (m.score / 4) * 100);
+    html += `<div class="maturity-row">
+      <div class="m-label">${m.area}</div>
+      <div class="m-bar"><div class="m-fill ${m.color}" style="width:${pct}%"></div></div>
+      <div class="m-score">${Number(m.score).toFixed(1)}/4</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // REMEDIATION ROADMAP
+  html += `<div class="report-section"><h3>Remediation Roadmap</h3>
+  <div class="roadmap-grid">
+    <div class="roadmap-col imm">
+      <h4>Immediate</h4>
+      ${(d.remediationRoadmap?.immediate||[]).map(r=>`<div class="roadmap-item"><div><strong style="color:var(--text);display:block;margin-bottom:2px;">${r.action}</strong><span style="font-size:0.76rem;color:var(--muted-2);">${r.owner} · ${r.finding}</span></div></div>`).join('')}
+    </div>
+    <div class="roadmap-col d30">
+      <h4>30 Days</h4>
+      ${(d.remediationRoadmap?.thirtyDays||[]).map(r=>`<div class="roadmap-item"><div><strong style="color:var(--text);display:block;margin-bottom:2px;">${r.action}</strong><span style="font-size:0.76rem;color:var(--muted-2);">${r.owner} · ${r.finding}</span></div></div>`).join('')}
+    </div>
+    <div class="roadmap-col d90">
+      <h4>90 Days</h4>
+      ${(d.remediationRoadmap?.ninetyDays||[]).map(r=>`<div class="roadmap-item"><div><strong style="color:var(--text);display:block;margin-bottom:2px;">${r.action}</strong><span style="font-size:0.76rem;color:var(--muted-2);">${r.owner} · ${r.finding}</span></div></div>`).join('')}
+    </div>
+  </div></div>`;
+
+  // FRAMEWORK MAPPING
+  html += `<div class="report-section"><h3>Framework Mapping</h3>
+  <div style="margin-top:4px;">`;
+  (d.frameworkMapping||[]).forEach(m => {
+    html += `<div class="fw-map-row">
+      <div class="fw-map-finding">${m.finding}</div>
+      <div class="fw-map-tags">${(m.tags||[]).map(t=>`<span class="fw-tag">${t}</span>`).join('')}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // ANALYST NOTES
+  if (d.analystNotes) {
+    html += `<div class="report-section"><h3>Analyst Notes</h3>
+    <div style="padding:14px 18px;border:1px solid rgba(85,199,255,0.14);border-radius:12px;background:rgba(85,199,255,0.04);">
+      <p style="color:var(--muted);font-size:0.9rem;line-height:1.72;">${d.analystNotes}</p>
+    </div></div>`;
+  }
+
+  document.getElementById('report-content').innerHTML = html;
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function startOver() {
+  uploadedFiles = []; fileContents = []; reportData = {};
+  document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+  document.getElementById('file-list').innerHTML = '';
+  document.querySelectorAll('.a-step').forEach(el => { el.classList.remove('done','active'); el.querySelector('.a-step-icon').textContent = '○'; });
+  document.getElementById('as-1').classList.add('active');
+  goTo(0);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>

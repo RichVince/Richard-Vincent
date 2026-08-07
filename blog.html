@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRC Audit Reports | Richard Vincent</title>
+  <meta name="description" content="Structured GRC audit reports by Richard Vincent demonstrating audit process, findings, risk ratings, NIST CSF and ISO 27001 alignment, and actionable recommendations for small business environments." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050914;
+      --bg-soft: #081221;
+      --panel: rgba(15,28,49,0.78);
+      --text: #f0f5fc;
+      --muted: #aebbd0;
+      --muted-2: #7f8ea5;
+      --accent: #55c7ff;
+      --accent-2: #9fe7ff;
+      --gold: #e7c873;
+      --success: #8df2b0;
+      --warning: #ffd166;
+      --danger: #ff8b94;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(159,231,255,0.26);
+      --shadow: 0 24px 80px rgba(0,0,0,0.44);
+      --max: 1060px;
+      --serif: 'IBM Plex Serif', Georgia, serif;
+      --sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+      --mono: 'IBM Plex Mono', 'Fira Mono', monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      min-height:100vh; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(85,199,255,0.12), transparent 34rem),
+        radial-gradient(circle at 88% 12%, rgba(231,200,115,0.08), transparent 28rem),
+        linear-gradient(180deg,#050914 0%,#07111f 50%,#050914 100%);
+      line-height:1.65; overflow-x:hidden;
+    }
+    body::before{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
+      background-size:44px 44px;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent 65%);
+      z-index:-1;
+    }
+    a{color:inherit;text-decoration:none;}
+    .container{width:min(92%,var(--max));margin:0 auto;}
+
+    /* NAV */
+    .nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);background:rgba(5,9,20,0.8);border-bottom:1px solid var(--border);}
+    .nav-inner{width:min(92%,var(--max));margin:0 auto;min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--sans);font-weight:600;letter-spacing:-0.01em;}
+    .brand-mark{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;color:#04101f;background:linear-gradient(135deg,var(--accent-2),var(--gold));font-size:0.78rem;font-weight:700;}
+    .nav-links{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:0.88rem;font-weight:500;}
+    .nav-links a:hover{color:var(--accent-2);transition:0.2s;}
+
+    /* PAGE HEADER */
+    .page-header{padding:72px 0 52px;}
+    .kicker{display:inline-flex;align-items:center;gap:8px;color:var(--accent-2);font-size:0.73rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:16px;}
+    .kicker::before{content:"";width:20px;height:1px;background:linear-gradient(90deg,transparent,var(--accent-2));}
+    .page-header h1{font-family:var(--serif);font-size:clamp(2.4rem,4.5vw,3.8rem);line-height:1.06;letter-spacing:-0.025em;margin-bottom:16px;}
+    .grad{background:linear-gradient(135deg,var(--text),var(--accent-2) 52%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .page-header p{color:var(--muted);max-width:660px;font-size:1.02rem;line-height:1.72;}
+    .intent-banner{margin-top:28px;padding:16px 20px;border-radius:16px;border:1px solid rgba(159,231,255,0.18);background:rgba(85,199,255,0.06);display:flex;align-items:flex-start;gap:14px;}
+    .intent-icon{width:36px;height:36px;flex-shrink:0;display:grid;place-items:center;border-radius:10px;background:rgba(85,199,255,0.14);color:var(--accent-2);font-weight:700;font-size:0.8rem;font-family:var(--mono);}
+    .intent-banner p{color:var(--muted);font-size:0.9rem;line-height:1.6;}
+    .intent-banner strong{color:var(--text);}
+
+    /* REPORT INDEX */
+    .report-index{display:grid;gap:16px;margin:0 0 56px;}
+    .index-row{
+      display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:18px;
+      padding:18px 20px;border-radius:18px;border:1px solid var(--border);
+      background:linear-gradient(180deg,var(--panel),rgba(8,18,33,0.7));
+      cursor:pointer;transition:0.22s ease;
+    }
+    .index-row:hover{border-color:rgba(159,231,255,0.22);transform:translateX(3px);}
+    .index-num{font-family:var(--mono);font-size:0.78rem;color:var(--muted-2);text-align:center;}
+    .index-info{}
+    .index-info strong{display:block;font-size:0.97rem;font-weight:600;margin-bottom:3px;}
+    .index-info span{color:var(--muted);font-size:0.83rem;}
+    .index-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .risk-pill{padding:4px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+    .risk-high{background:rgba(255,139,148,0.12);border:1px solid rgba(255,139,148,0.22);color:var(--danger);}
+    .risk-med{background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);color:var(--warning);}
+    .risk-low{background:rgba(141,242,176,0.1);border:1px solid rgba(141,242,176,0.18);color:var(--success);}
+    .index-arrow{color:var(--muted-2);font-size:1.1rem;}
+
+    /* OVERLAY */
+    .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,8,18,0.97);backdrop-filter:blur(14px);overflow-y:auto;padding:36px 18px 80px;}
+    .overlay.open{display:block;}
+    .report-wrap{max-width:760px;margin:0 auto;}
+
+    /* REPORT HEADER */
+    .back-btn{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:0.86rem;cursor:pointer;margin-bottom:32px;transition:color 0.2s;}
+    .back-btn:hover{color:var(--accent-2);}
+    .report-header{padding:32px 36px;border-radius:22px;border:1px solid rgba(159,231,255,0.18);background:linear-gradient(160deg,rgba(18,35,62,0.92),rgba(8,18,33,0.9));margin-bottom:32px;}
+    .rh-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+    .rh-type{padding:5px 11px;border-radius:999px;background:rgba(85,199,255,0.1);border:1px solid rgba(85,199,255,0.18);color:var(--accent-2);font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;}
+    .rh-meta{color:var(--muted-2);font-size:0.8rem;font-family:var(--mono);}
+    .report-header h1{font-family:var(--serif);font-size:clamp(1.6rem,2.8vw,2.3rem);line-height:1.1;letter-spacing:-0.02em;margin-bottom:14px;}
+    .report-header .subtitle{color:var(--muted);font-size:0.95rem;line-height:1.7;margin-bottom:20px;}
+    .rh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+    .rh-stat{padding:11px 14px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,0.035);}
+    .rh-stat span{display:block;color:var(--muted-2);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:4px;}
+    .rh-stat strong{font-size:0.92rem;font-weight:600;color:var(--text);}
+
+    /* REPORT BODY */
+    .report-body{font-size:0.97rem;line-height:1.78;color:#c8d6e8;}
+    .section-h{font-family:var(--serif);font-size:1.45rem;color:var(--text);margin:36px 0 14px;letter-spacing:-0.02em;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07);}
+    .sub-h{font-size:0.72rem;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:0.12em;margin:24px 0 8px;}
+    .report-body p{margin-bottom:16px;}
+    .report-body ul,
+    .report-body ol{padding-left:20px;margin-bottom:16px;}
+    .report-body li{margin-bottom:8px;}
+    .report-body strong{color:var(--text);font-weight:600;}
+
+    /* FINDING CARD */
+    .finding{margin:20px 0;border-radius:18px;overflow:hidden;border:1px solid var(--border);}
+    .finding-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.04);}
+    .finding-id{font-family:var(--mono);font-size:0.75rem;color:var(--muted-2);}
+    .finding-title{font-weight:600;font-size:0.95rem;flex:1;}
+    .finding-body{padding:18px;}
+    .finding-body p{margin-bottom:10px;font-size:0.92rem;}
+    .finding-body p:last-child{margin-bottom:0;}
+    .f-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-2);display:block;margin-bottom:3px;}
+
+    /* FRAMEWORK CITE */
+    .fw-cite{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:8px;background:rgba(231,200,115,0.08);border:1px solid rgba(231,200,115,0.15);color:var(--gold);font-size:0.72rem;font-weight:600;font-family:var(--mono);margin:2px;}
+
+    /* RECOMMENDATION TABLE */
+    .rec-table{width:100%;border-collapse:collapse;margin:18px 0;font-size:0.88rem;}
+    .rec-table th{text-align:left;padding:9px 13px;background:rgba(85,199,255,0.07);color:var(--accent-2);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;border-bottom:1px solid var(--border);}
+    .rec-table td{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top;}
+    .rec-table tr:last-child td{border-bottom:0;}
+    .rec-table td:first-child{color:var(--text);font-weight:500;width:36%;}
+    .pri-badge{padding:3px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+    .pri-imm{background:rgba(255,139,148,0.12);color:var(--danger);}
+    .pri-30{background:rgba(255,209,102,0.1);color:var(--warning);}
+    .pri-90{background:rgba(141,242,176,0.1);color:var(--success);}
+
+    /* CALLOUT */
+    .callout{margin:22px 0;padding:16px 20px;border-left:3px solid var(--accent);border-radius:0 14px 14px 0;background:rgba(85,199,255,0.06);}
+    .callout p{margin:0;font-size:0.91rem;color:var(--muted);}
+    .callout strong{color:var(--accent-2);}
+    .callout-warn{border-left-color:var(--warning);}
+    .callout-warn strong{color:var(--warning);}
+    .callout-danger{border-left-color:var(--danger);}
+    .callout-danger strong{color:var(--danger);}
+
+    /* EXEC SUMMARY BOX */
+    .exec-box{padding:22px 26px;border-radius:18px;border:1px solid rgba(159,231,255,0.16);background:rgba(15,28,49,0.6);margin-bottom:28px;}
+    .exec-box h3{font-family:var(--serif);font-size:1.08rem;margin-bottom:10px;color:var(--text);}
+    .exec-box p{color:var(--muted);font-size:0.92rem;margin-bottom:0;}
+
+    /* SCOPE TABLE */
+    .scope-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:0.88rem;}
+    .scope-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.045);color:var(--muted);vertical-align:top;}
+    .scope-table tr:last-child td{border-bottom:0;}
+    .scope-table td:first-child{color:var(--text);font-weight:600;width:35%;}
+
+    /* MATURITY GAUGE */
+    .maturity-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+    .maturity-row:last-child{border-bottom:0;}
+    .m-label{width:190px;flex-shrink:0;font-size:0.85rem;color:var(--muted);}
+    .m-bar{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;}
+    .m-fill{height:100%;border-radius:99px;}
+    .m-fill.red{background:linear-gradient(90deg,rgba(255,139,148,0.6),var(--danger));}
+    .m-fill.amber{background:linear-gradient(90deg,rgba(255,209,102,0.5),var(--warning));}
+    .m-fill.green{background:linear-gradient(90deg,rgba(141,242,176,0.5),var(--success));}
+    .m-score{width:32px;text-align:right;font-size:0.78rem;font-family:var(--mono);color:var(--muted-2);}
+
+    /* REPORT FOOTER */
+    .report-footer{margin-top:40px;padding-top:24px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;}
+
+    /* PAGE FOOTER */
+    footer{padding:30px 0 38px;border-top:1px solid var(--border);text-align:center;color:var(--muted-2);font-size:0.86rem;}
+
+    @media(max-width:700px){
+      .rh-grid{grid-template-columns:repeat(2,1fr);}
+      .index-row{grid-template-columns:36px 1fr;}
+      .index-right{display:none;}
+      .report-header{padding:22px;}
+    }
+    @media(max-width:480px){
+      .nav-inner{flex-direction:column;align-items:flex-start;padding:12px 0;}
+      .page-header{padding:52px 0 36px;}
+    }
+  </style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">RV</span>
+      <span>Richard Vincent</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">Portfolio</a>
+      <a href="index.html#grc-projects">Projects</a>
+      <a href="index.html#frameworks">Frameworks</a>
+      <a href="blog.html" style="color:var(--accent-2)">Audit Reports</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-header">
+    <div class="container">
+      <div class="kicker">GRC Portfolio · Audit Reports</div>
+      <h1>Security audit reports for a <span class="grad">small business environment.</span></h1>
+      <p>Five structured GRC audit reports demonstrating findings identification, risk rating, framework alignment, and prioritized recommendations — written the way a security analyst would deliver them to a real client.</p>
+      <div class="intent-banner">
+        <div class="intent-icon">&#9432;</div>
+        <p><strong>Portfolio intent:</strong> These reports demonstrate understanding of the audit process end-to-end — scoping, evidence review, findings documentation, risk rating, framework citation (NIST CSF, ISO 27001, CIS Controls), and actionable recommendations. The subject organization is a fictional small business (Meridian Consulting Group, 22 employees) used consistently across all five reports.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:0 0 88px;">
+    <div class="container">
+
+      <div class="report-index">
+
+        <div class="index-row" onclick="openReport('r1')">
+          <div class="index-num">01</div>
+          <div class="index-info">
+            <strong>Access Control & Identity Management Audit</strong>
+            <span>User provisioning, shared accounts, MFA enforcement, and offboarding gaps</span>
+          </div>
+          <div class="index-right">
+            <span class="risk-pill risk-high">High Risk</span>
+            <span class="index-arrow">&#8594;</span>
+          </div>
+        </div>
+
+        <div class="index-row" onclick="openReport('r2')">
+          <div class="index-num">02</div>
+          <div class="index-info">
+            <strong>Security Logging & Monitoring Readiness Review</strong>
+            <span>Log coverage gaps, retention policy, alert configuration, and SIEM readiness</span>
+          </div>
+          <div class="index-right">
+            <span class="risk-pill risk-high">High Risk</span>
+            <span class="index-arrow">&#8594;</span>
+          </div>
+        </div>
+
+        <div class="index-row" onclick="openReport('r3')">
+          <div class="index-num">03</div>
+          <div class="index-info">
+            <strong>Data Protection & Backup Controls Assessment</strong>
+            <span>Backup verification, encryption posture, data classification, and retention gaps</span>
+          </div>
+          <div class="index-right">
+            <span class="risk-pill risk-med">Medium Risk</span>
+            <span class="index-arrow">&#8594;</span>
+          </div>
+        </div>
+
+        <div class="index-row" onclick="openReport('r4')">
+          <div class="index-num">04</div>
+          <div class="index-info">
+            <strong>Vulnerability & Patch Management Audit</strong>
+            <span>Patching cadence, asset inventory accuracy, end-of-life software, and remediation SLAs</span>
+          </div>
+          <div class="index-right">
+            <span class="risk-pill risk-high">High Risk</span>
+            <span class="index-arrow">&#8594;</span>
+          </div>
+        </div>
+
+        <div class="index-row" onclick="openReport('r5')">
+          <div class="index-num">05</div>
+          <div class="index-info">
+            <strong>Security Governance & Policy Framework Review</strong>
+            <span>Policy completeness, ownership, awareness training, and vendor management</span>
+          </div>
+          <div class="index-right">
+            <span class="risk-pill risk-med">Medium Risk</span>
+            <span class="index-arrow">&#8594;</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== REPORT 1 ===================== -->
+<div class="overlay" id="r1">
+<div class="report-wrap">
+  <div class="back-btn" onclick="closeReport('r1')">&#8592; Back to Audit Reports</div>
+
+  <div class="report-header">
+    <div class="rh-top">
+      <span class="rh-type">Access Control Audit</span>
+      <span class="rh-meta">Report Ref: MCG-GRC-001 &nbsp;|&nbsp; May 2026</span>
+    </div>
+    <h1>Access Control & Identity Management Audit</h1>
+    <p class="subtitle">Subject organization: Meridian Consulting Group — 22 employees, cloud-based Microsoft 365 environment, no dedicated IT staff. Audit conducted against NIST CSF 2.0 and ISO 27001:2022 Annex A controls.</p>
+    <div class="rh-grid">
+      <div class="rh-stat"><span>Overall Risk</span><strong style="color:var(--danger)">High</strong></div>
+      <div class="rh-stat"><span>Findings</span><strong>4</strong></div>
+      <div class="rh-stat"><span>Frameworks</span><strong>NIST · ISO</strong></div>
+      <div class="rh-stat"><span>Review Period</span><strong>Q1 2026</strong></div>
+    </div>
+  </div>
+
+  <div class="report-body">
+
+    <div class="exec-box">
+      <h3>Executive Summary</h3>
+      <p>An access control review of Meridian Consulting Group identified four findings across user provisioning, shared account usage, multi-factor authentication enforcement, and offboarding procedures. The overall risk rating is <strong>High</strong>. Two findings represent immediate risk requiring remediation within 30 days. Without structured access governance, the organization is exposed to unauthorized access, insider threat scenarios, and audit non-conformance under ISO 27001 Annex A.5 and A.8 controls.</p>
+    </div>
+
+    <h2 class="section-h">1. Audit Scope and Methodology</h2>
+    <div class="sub-h">Scope</div>
+    <table class="scope-table">
+      <tr><td>Systems Reviewed</td><td>Microsoft 365 (Azure AD / Entra ID), shared file storage, email platform</td></tr>
+      <tr><td>Users in Scope</td><td>All 22 active accounts plus 3 former employee accounts identified during review</td></tr>
+      <tr><td>Review Method</td><td>Account inventory export, permission review, conditional access policy inspection, interview with office manager</td></tr>
+      <tr><td>Framework Alignment</td><td>NIST CSF 2.0 (PR.AA, PR.AC), ISO 27001:2022 Annex A.5.15, A.5.16, A.5.18, A.8.2</td></tr>
+    </table>
+    <div class="sub-h">Methodology</div>
+    <p>Evidence was collected through direct system configuration review and user account export. The audit assessed whether access controls are appropriately designed (design effectiveness) and whether they are consistently applied and maintained over time (operating effectiveness).</p>
+
+    <h2 class="section-h">2. Findings</h2>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-001</span>
+        <span class="finding-title">Three former employee accounts remain active</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Account export identified three Microsoft 365 accounts belonging to employees who departed between 4 and 11 months ago. All three accounts had active licenses and valid passwords at the time of review. Two accounts had last login activity recorded within the past 60 days, suggesting possible unauthorized or unmonitored access.</p>
+        <span class="f-label">Risk</span>
+        <p>Active accounts for departed employees create a direct path for unauthorized access. If credentials were shared or compromised prior to departure, the organization would have no awareness of ongoing access. This also constitutes a non-conformance against ISO 27001 Annex A.5.18 (Access rights) and NIST CSF PR.AA-02 (Identities are proofed and bound to credentials).</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.18</span> <span class="fw-cite">NIST CSF PR.AA-02</span> <span class="fw-cite">CIS Control 6.2</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-002</span>
+        <span class="finding-title">MFA not enforced for all users</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Conditional Access policy review found that MFA is enabled for the administrator account but is not enforced organization-wide. 14 of 22 standard user accounts have no MFA registered. Password spray and credential stuffing attacks against Microsoft 365 are among the most frequently observed attack vectors for small organizations.</p>
+        <span class="f-label">Risk</span>
+        <p>A single compromised credential in a non-MFA account provides full access to email, files, and cloud resources. The organization's data and client communications are exposed to account takeover with no compensating control in place.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.5</span> <span class="fw-cite">NIST CSF PR.AA-03</span> <span class="fw-cite">CIS Control 6.3</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-003</span>
+        <span class="finding-title">Shared team account in use for client portal access</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>One shared credential is used by five members of the operations team to access a third-party client portal. The credential is stored in a shared email thread. No individual accountability exists for actions taken under this account.</p>
+        <span class="f-label">Risk</span>
+        <p>Shared accounts prevent attribution of activity to individual users, undermine audit trail integrity, and create a persistent access risk when team members leave. The credential storage method (email thread) increases exposure.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.16</span> <span class="fw-cite">NIST CSF PR.AA-01</span> <span class="fw-cite">CIS Control 5.1</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-004</span>
+        <span class="finding-title">No documented offboarding procedure for system access</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>No written procedure exists for revoking system access when an employee departs. Access removal is performed informally and inconsistently. Finding F-001 is a direct consequence of this gap.</p>
+        <span class="f-label">Risk</span>
+        <p>Without a documented and enforced offboarding checklist, access revocation will continue to be incomplete. This is both an operational risk and a governance non-conformance.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.6.5</span> <span class="fw-cite">NIST CSF GV.PO-01</span> <span class="fw-cite">CIS Control 6.2</span></p>
+      </div>
+    </div>
+
+    <h2 class="section-h">3. Recommendations</h2>
+    <table class="rec-table">
+      <thead><tr><th>Recommendation</th><th>Priority</th><th>Owner</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>Immediately disable the three former employee accounts and review login history for unauthorized activity</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>Office Manager</td><td>Low — 1 hour</td></tr>
+        <tr><td>Enable and enforce MFA for all Microsoft 365 accounts via Conditional Access policy</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>IT / MSP</td><td>Low — 2 hours</td></tr>
+        <tr><td>Replace the shared client portal credential with individual accounts or a password manager with per-user vaults</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Operations Lead</td><td>Medium</td></tr>
+        <tr><td>Document and implement a formal offboarding checklist that includes system access revocation as a required step</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager</td><td>Low — template required</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <p><strong>Analyst note:</strong> Findings F-001 and F-002 should be treated as a combined immediate action item. Disabling inactive accounts and enforcing MFA in the same remediation window closes the most significant attack surface with minimal effort and no cost beyond implementation time.</p>
+    </div>
+
+    <h2 class="section-h">4. Control Maturity Assessment</h2>
+    <div style="margin-top:14px;">
+      <div class="maturity-row"><div class="m-label">User provisioning process</div><div class="m-bar"><div class="m-fill amber" style="width:30%"></div></div><div class="m-score">1/4</div></div>
+      <div class="maturity-row"><div class="m-label">MFA enforcement</div><div class="m-bar"><div class="m-fill red" style="width:15%"></div></div><div class="m-score">0.5/4</div></div>
+      <div class="maturity-row"><div class="m-label">Offboarding procedure</div><div class="m-bar"><div class="m-fill red" style="width:10%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Privileged access control</div><div class="m-bar"><div class="m-fill amber" style="width:40%"></div></div><div class="m-score">1.5/4</div></div>
+      <div class="maturity-row"><div class="m-label">Access review process</div><div class="m-bar"><div class="m-fill red" style="width:8%"></div></div><div class="m-score">0/4</div></div>
+    </div>
+
+    <div class="report-footer">
+      <span class="fw-cite">ISO 27001:2022</span><span class="fw-cite">NIST CSF 2.0</span><span class="fw-cite">CIS Controls v8</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== REPORT 2 ===================== -->
+<div class="overlay" id="r2">
+<div class="report-wrap">
+  <div class="back-btn" onclick="closeReport('r2')">&#8592; Back to Audit Reports</div>
+
+  <div class="report-header">
+    <div class="rh-top">
+      <span class="rh-type">Logging & Monitoring Audit</span>
+      <span class="rh-meta">Report Ref: MCG-GRC-002 &nbsp;|&nbsp; May 2026</span>
+    </div>
+    <h1>Security Logging & Monitoring Readiness Review</h1>
+    <p class="subtitle">Subject organization: Meridian Consulting Group — 22 employees, Microsoft 365 environment. Review assessed logging configuration, retention periods, alert coverage, and the organization's ability to investigate a security event.</p>
+    <div class="rh-grid">
+      <div class="rh-stat"><span>Overall Risk</span><strong style="color:var(--danger)">High</strong></div>
+      <div class="rh-stat"><span>Findings</span><strong>4</strong></div>
+      <div class="rh-stat"><span>Frameworks</span><strong>NIST · ISO</strong></div>
+      <div class="rh-stat"><span>Review Period</span><strong>Q1 2026</strong></div>
+    </div>
+  </div>
+
+  <div class="report-body">
+
+    <div class="exec-box">
+      <h3>Executive Summary</h3>
+      <p>Meridian Consulting Group currently lacks the logging and monitoring capability needed to detect, investigate, or respond to a security event. Microsoft 365 audit logging is partially enabled but not configured for complete coverage. No alert rules are in place. Log data is not retained beyond 90 days in any structured format. The organization would not be able to determine the scope or timeline of a compromise if one were discovered today. Overall risk is rated <strong>High</strong>.</p>
+    </div>
+
+    <h2 class="section-h">1. Audit Scope and Methodology</h2>
+    <table class="scope-table">
+      <tr><td>Systems Reviewed</td><td>Microsoft 365 Purview Audit, Azure AD Sign-In Logs, SharePoint activity, Exchange audit trail</td></tr>
+      <tr><td>Review Method</td><td>Audit configuration review, log export sample analysis, retention policy inspection</td></tr>
+      <tr><td>Framework Alignment</td><td>NIST CSF 2.0 (DE.AE, DE.CM), ISO 27001:2022 Annex A.8.15, A.8.16, A.5.25</td></tr>
+    </table>
+
+    <h2 class="section-h">2. Findings</h2>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-001</span>
+        <span class="finding-title">Unified Audit Log not enabled for all workloads</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Microsoft 365 Unified Audit Log (UAL) is enabled at the tenant level, but audit logging for Exchange mailbox activity and SharePoint file access events is not configured. These two workloads contain the organization's most sensitive data — client communications and project files.</p>
+        <span class="f-label">Risk</span>
+        <p>Without mailbox and SharePoint audit logging, the organization cannot determine whether email data was exfiltrated, files were accessed by unauthorized parties, or permissions were changed. These are the exact events relevant to a data breach investigation or insider threat scenario.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.15</span> <span class="fw-cite">NIST CSF DE.AE-02</span> <span class="fw-cite">CIS Control 8.2</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-002</span>
+        <span class="finding-title">No alert rules configured for high-risk events</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Microsoft 365 Defender and Purview both support alert policies for events such as mass file deletion, impossible travel logins, forwarding rules added to mailboxes, and failed MFA attempts. Zero alert rules are currently configured. No one at the organization would be notified if any of these events occurred.</p>
+        <span class="f-label">Risk</span>
+        <p>Business email compromise (BEC) attacks frequently begin with a forwarding rule added to a compromised mailbox. Without alerts, this rule could persist for weeks or months while communications are silently forwarded to an attacker. This is a known pattern in small business BEC incidents.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.16</span> <span class="fw-cite">NIST CSF DE.CM-01</span> <span class="fw-cite">CIS Control 8.11</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-003</span>
+        <span class="finding-title">Log retention policy not documented; effective retention is 90 days</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>No formal log retention policy exists. Microsoft 365 E3 licenses retain audit logs for 90 days by default. The organization has not extended retention and has no policy governing what should be retained or for how long.</p>
+        <span class="f-label">Risk</span>
+        <p>Many security incidents are not discovered within 90 days. If a compromise is discovered at the 120-day mark, the relevant log data will be gone. Industry guidance (and several regulatory frameworks) recommends a minimum of 12 months retention for security event logs.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.15</span> <span class="fw-cite">NIST CSF DE.AE-03</span> <span class="fw-cite">CIS Control 8.3</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-004</span>
+        <span class="finding-title">No process exists for reviewing security logs</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Even where logging is enabled, no individual at Meridian is assigned responsibility for reviewing logs. There is no schedule, no review criteria, and no escalation path if an anomaly were identified. Logging without review provides no detective control value.</p>
+        <span class="f-label">Risk</span>
+        <p>A detective control that is never checked is functionally the same as no detective control. Logging infrastructure creates a false sense of security unless paired with a defined review and response process.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.25</span> <span class="fw-cite">NIST CSF DE.AE-06</span> <span class="fw-cite">CIS Control 8.1</span></p>
+      </div>
+    </div>
+
+    <h2 class="section-h">3. Recommendations</h2>
+    <table class="rec-table">
+      <thead><tr><th>Recommendation</th><th>Priority</th><th>Owner</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>Enable mailbox and SharePoint audit logging via Microsoft Purview Audit configuration</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>IT / MSP</td><td>Low — 1–2 hours</td></tr>
+        <tr><td>Configure a minimum of 5 alert policies: mass file deletion, impossible travel, mailbox forwarding rules, failed sign-ins exceeding threshold, new admin account creation</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>IT / MSP</td><td>Low — 2 hours</td></tr>
+        <tr><td>Upgrade to Microsoft 365 E5 Compliance or Purview Audit (Premium) to extend log retention to 12 months, or export logs monthly to a secure, long-term storage location</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager + MSP</td><td>Medium — cost decision required</td></tr>
+        <tr><td>Assign a named individual (or MSP contact) responsible for monthly log review. Document the review scope and escalation criteria in a one-page procedure.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager</td><td>Low — process documentation</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p><strong>Analyst note:</strong> Findings F-001 and F-002 can both be remediated within a single 2-hour configuration session at no additional licensing cost. These should be treated as the highest-priority action items given that the absence of logging and alerting leaves the organization completely blind to active threats.</p>
+    </div>
+
+    <h2 class="section-h">4. Control Maturity Assessment</h2>
+    <div style="margin-top:14px;">
+      <div class="maturity-row"><div class="m-label">Audit log coverage</div><div class="m-bar"><div class="m-fill amber" style="width:25%"></div></div><div class="m-score">1/4</div></div>
+      <div class="maturity-row"><div class="m-label">Alert configuration</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Log retention policy</div><div class="m-bar"><div class="m-fill red" style="width:10%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Log review process</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Incident detection capability</div><div class="m-bar"><div class="m-fill red" style="width:12%"></div></div><div class="m-score">0.5/4</div></div>
+    </div>
+
+    <div class="report-footer">
+      <span class="fw-cite">ISO 27001:2022</span><span class="fw-cite">NIST CSF 2.0</span><span class="fw-cite">CIS Controls v8</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== REPORT 3 ===================== -->
+<div class="overlay" id="r3">
+<div class="report-wrap">
+  <div class="back-btn" onclick="closeReport('r3')">&#8592; Back to Audit Reports</div>
+
+  <div class="report-header">
+    <div class="rh-top">
+      <span class="rh-type">Data Protection Audit</span>
+      <span class="rh-meta">Report Ref: MCG-GRC-003 &nbsp;|&nbsp; May 2026</span>
+    </div>
+    <h1>Data Protection & Backup Controls Assessment</h1>
+    <p class="subtitle">Subject organization: Meridian Consulting Group. This assessment reviewed backup configuration and verification, data encryption posture, data classification, and retention policy coverage across cloud and local storage.</p>
+    <div class="rh-grid">
+      <div class="rh-stat"><span>Overall Risk</span><strong style="color:var(--warning)">Medium</strong></div>
+      <div class="rh-stat"><span>Findings</span><strong>4</strong></div>
+      <div class="rh-stat"><span>Frameworks</span><strong>NIST · ISO</strong></div>
+      <div class="rh-stat"><span>Review Period</span><strong>Q1 2026</strong></div>
+    </div>
+  </div>
+
+  <div class="report-body">
+
+    <div class="exec-box">
+      <h3>Executive Summary</h3>
+      <p>Meridian Consulting Group has a partial backup posture. Microsoft 365 cloud data benefits from platform-level redundancy, but no structured backup process exists for local device data, and backup restoration has never been tested. Data classification is absent, and sensitive client data is stored without consistent controls. The overall risk is rated <strong>Medium</strong>, with one finding that could escalate to High in the event of a ransomware incident.</p>
+    </div>
+
+    <h2 class="section-h">1. Audit Scope and Methodology</h2>
+    <table class="scope-table">
+      <tr><td>Systems Reviewed</td><td>Microsoft 365 SharePoint/OneDrive, local workstations (sample of 4), external drive usage, email platform</td></tr>
+      <tr><td>Review Method</td><td>Interview with office manager, SharePoint versioning configuration review, spot-check of workstation backup agent status</td></tr>
+      <tr><td>Framework Alignment</td><td>NIST CSF 2.0 (PR.DS, RC.RP), ISO 27001:2022 Annex A.8.13, A.5.12, A.8.24</td></tr>
+    </table>
+
+    <h2 class="section-h">2. Findings</h2>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-001</span>
+        <span class="finding-title">Backup restoration has never been tested</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Microsoft 365 versioning is enabled in SharePoint, and OneDrive provides file recovery capability. However, no restoration test has ever been performed. The organization assumes data can be recovered from these services but has no verified evidence of successful recovery. Three workstations are enrolled in a Microsoft backup service, but enrollment dates could not be confirmed and no restore test record exists.</p>
+        <span class="f-label">Risk</span>
+        <p>An untested backup is not a reliable backup. In a ransomware scenario, discovering that backups are incomplete or unrestorable at the point of recovery significantly extends downtime and may result in permanent data loss.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.13</span> <span class="fw-cite">NIST CSF RC.RP-03</span> <span class="fw-cite">CIS Control 11.3</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-002</span>
+        <span class="finding-title">Four workstations store work files locally without any backup</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Site visit and user interviews identified four workstations where employees save project files to local desktop or Documents folders rather than OneDrive or SharePoint. These files are not covered by any backup solution. Two of these workstations belong to employees who work primarily on client deliverables.</p>
+        <span class="f-label">Risk</span>
+        <p>Hardware failure, theft, or ransomware on any of these devices would result in permanent loss of work product. The risk is higher for client-facing files where loss could have contractual or reputational consequences.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.13</span> <span class="fw-cite">NIST CSF PR.DS-10</span> <span class="fw-cite">CIS Control 11.1</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-003</span>
+        <span class="finding-title">No data classification policy or scheme in place</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>The organization stores client contracts, financial records, employee HR files, and general project documents in a single SharePoint environment without any classification, labeling, or differentiated access controls. There is no policy defining what types of data exist, how they should be handled, or what protections are appropriate for each category.</p>
+        <span class="f-label">Risk</span>
+        <p>Without classification, sensitive data cannot be systematically protected, and employees cannot make informed decisions about how to handle client information. This also creates a compliance exposure if the organization handles data subject to contractual data protection obligations.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.12</span> <span class="fw-cite">NIST CSF ID.AM-05</span> <span class="fw-cite">CIS Control 3.2</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-004</span>
+        <span class="finding-title">Encryption at rest not verified for all data stores</span>
+        <span class="risk-pill risk-low">Low</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Microsoft 365 encrypts data at rest by default. However, BitLocker status on workstations was confirmed on only 2 of 6 devices reviewed. The four remaining devices could not be confirmed as encrypted. If any of these devices is lost or stolen, the data on local storage would be accessible without authentication.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.24</span> <span class="fw-cite">NIST CSF PR.DS-01</span> <span class="fw-cite">CIS Control 3.6</span></p>
+      </div>
+    </div>
+
+    <h2 class="section-h">3. Recommendations</h2>
+    <table class="rec-table">
+      <thead><tr><th>Recommendation</th><th>Priority</th><th>Owner</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>Conduct a documented backup restoration test for both SharePoint/OneDrive and workstation backup, and schedule quarterly thereafter</td><td><span class="pri-badge pri-30">30 Days</span></td><td>IT / MSP</td><td>Low — 2–3 hours</td></tr>
+        <tr><td>Enforce OneDrive Known Folder Move (KFM) via Microsoft 365 policy to redirect Desktop, Documents, and Pictures folders to OneDrive on all workstations</td><td><span class="pri-badge pri-30">30 Days</span></td><td>IT / MSP</td><td>Low — policy change</td></tr>
+        <tr><td>Develop a simple 3-tier data classification scheme (Public, Internal, Confidential) and communicate handling requirements to all staff</td><td><span class="pri-badge pri-90">90 Days</span></td><td>Office Manager</td><td>Medium — policy + comms</td></tr>
+        <tr><td>Audit BitLocker status on all workstations and enable on all devices where absent. Confirm via Intune compliance policy if available.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>IT / MSP</td><td>Low</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-h">4. Control Maturity Assessment</h2>
+    <div style="margin-top:14px;">
+      <div class="maturity-row"><div class="m-label">Backup coverage</div><div class="m-bar"><div class="m-fill amber" style="width:45%"></div></div><div class="m-score">1.5/4</div></div>
+      <div class="maturity-row"><div class="m-label">Backup testing</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Data classification</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Encryption at rest</div><div class="m-bar"><div class="m-fill amber" style="width:50%"></div></div><div class="m-score">2/4</div></div>
+      <div class="maturity-row"><div class="m-label">Retention policy</div><div class="m-bar"><div class="m-fill red" style="width:10%"></div></div><div class="m-score">0/4</div></div>
+    </div>
+
+    <div class="report-footer">
+      <span class="fw-cite">ISO 27001:2022</span><span class="fw-cite">NIST CSF 2.0</span><span class="fw-cite">CIS Controls v8</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== REPORT 4 ===================== -->
+<div class="overlay" id="r4">
+<div class="report-wrap">
+  <div class="back-btn" onclick="closeReport('r4')">&#8592; Back to Audit Reports</div>
+
+  <div class="report-header">
+    <div class="rh-top">
+      <span class="rh-type">Vulnerability Management Audit</span>
+      <span class="rh-meta">Report Ref: MCG-GRC-004 &nbsp;|&nbsp; May 2026</span>
+    </div>
+    <h1>Vulnerability & Patch Management Audit</h1>
+    <p class="subtitle">Subject organization: Meridian Consulting Group. This audit assessed the organization's asset inventory accuracy, patching cadence, end-of-life software exposure, and remediation tracking capability.</p>
+    <div class="rh-grid">
+      <div class="rh-stat"><span>Overall Risk</span><strong style="color:var(--danger)">High</strong></div>
+      <div class="rh-stat"><span>Findings</span><strong>4</strong></div>
+      <div class="rh-stat"><span>Frameworks</span><strong>NIST · ISO</strong></div>
+      <div class="rh-stat"><span>Review Period</span><strong>Q1 2026</strong></div>
+    </div>
+  </div>
+
+  <div class="report-body">
+
+    <div class="exec-box">
+      <h3>Executive Summary</h3>
+      <p>Meridian Consulting Group does not have a structured vulnerability or patch management program. No complete asset inventory exists, patch status is inconsistent across workstations, and two devices are running software versions that are no longer supported by the vendor and will not receive security updates. The overall risk rating is <strong>High</strong>. Unpatched systems in a small business environment are among the most common entry points for ransomware and opportunistic attacks.</p>
+    </div>
+
+    <h2 class="section-h">1. Audit Scope and Methodology</h2>
+    <table class="scope-table">
+      <tr><td>Systems Reviewed</td><td>6 Windows workstations (sample), Microsoft 365 tenant, router and network switch firmware</td></tr>
+      <tr><td>Review Method</td><td>Windows Update status review per device, installed application inventory, OS version check, interview with office manager</td></tr>
+      <tr><td>Framework Alignment</td><td>NIST CSF 2.0 (ID.AM, PR.PS), ISO 27001:2022 Annex A.8.8, A.8.9, A.5.9</td></tr>
+    </table>
+
+    <h2 class="section-h">2. Findings</h2>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-001</span>
+        <span class="finding-title">Two workstations running Windows 10 with no upgrade plan</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Windows 10 reaches end-of-life support on October 14, 2025. Two workstations at Meridian are running Windows 10 and have not been upgraded to Windows 11. After end-of-life, Microsoft will no longer issue security patches for these operating systems. Both devices are used daily for client-facing work and have internet access.</p>
+        <span class="f-label">Risk</span>
+        <p>End-of-life operating systems will accumulate unpatched vulnerabilities indefinitely. These devices represent a persistent, escalating risk that will not be mitigated without hardware or OS upgrade. Attackers actively scan for and target EOL systems because exploitation requires no zero-day — only known, unpatched CVEs.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.8</span> <span class="fw-cite">NIST CSF PR.PS-02</span> <span class="fw-cite">CIS Control 2.2</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-002</span>
+        <span class="finding-title">Windows Update deferred or disabled on 3 of 6 devices reviewed</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Of the six workstations reviewed, three showed pending Windows Update patches that were 45, 62, and 91 days outstanding respectively. On one device, automatic updates appear to have been manually disabled. No centralized patch management tool is in use, and patch status is not tracked.</p>
+        <span class="f-label">Risk</span>
+        <p>Patches outstanding for more than 30 days represent a significant window of exposure. The 91-day deferred device has missed multiple cumulative security updates that likely address actively exploited vulnerabilities.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.8</span> <span class="fw-cite">NIST CSF PR.PS-02</span> <span class="fw-cite">CIS Control 7.3</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-003</span>
+        <span class="finding-title">No formal asset inventory exists</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>The organization does not maintain a documented inventory of hardware or software assets. The office manager was able to identify most devices from memory, but could not confirm whether all devices in use were accounted for. Two devices purchased by remote employees could not be located in any record.</p>
+        <span class="f-label">Risk</span>
+        <p>You cannot protect what you cannot see. An unknown asset on the network is an unmanaged attack surface. Without inventory, the organization cannot confirm patch coverage, cannot conduct access reviews tied to devices, and cannot respond accurately to a data breach.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.9</span> <span class="fw-cite">NIST CSF ID.AM-01</span> <span class="fw-cite">CIS Control 1.1</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-004</span>
+        <span class="finding-title">Network router firmware not updated in 18+ months</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>The office network router was last updated at installation approximately 18–24 months ago. Firmware version review identified the current version as two major releases behind the vendor's current release. Known CVEs exist for the installed firmware version.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.8.9</span> <span class="fw-cite">NIST CSF PR.PS-03</span> <span class="fw-cite">CIS Control 7.4</span></p>
+      </div>
+    </div>
+
+    <h2 class="section-h">3. Recommendations</h2>
+    <table class="rec-table">
+      <thead><tr><th>Recommendation</th><th>Priority</th><th>Owner</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>Upgrade or replace the two Windows 10 devices. If hardware supports Windows 11, upgrade immediately. If not, plan hardware replacement within 60 days.</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>Office Manager + MSP</td><td>Medium — possible hardware cost</td></tr>
+        <tr><td>Re-enable automatic Windows Update on all workstations and apply all outstanding patches. Verify via manual check or Intune compliance dashboard.</td><td><span class="pri-badge pri-imm">Immediate</span></td><td>IT / MSP</td><td>Low — 2–3 hours</td></tr>
+        <tr><td>Create a hardware and software asset register (spreadsheet minimum). Record device name, OS version, owner, and date of last update for all devices.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager</td><td>Low — 2–3 hours</td></tr>
+        <tr><td>Update router firmware to current vendor release and establish a semi-annual firmware review for network devices.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>IT / MSP</td><td>Low — 1 hour</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-h">4. Control Maturity Assessment</h2>
+    <div style="margin-top:14px;">
+      <div class="maturity-row"><div class="m-label">Asset inventory</div><div class="m-bar"><div class="m-fill red" style="width:15%"></div></div><div class="m-score">0.5/4</div></div>
+      <div class="maturity-row"><div class="m-label">Patch management process</div><div class="m-bar"><div class="m-fill red" style="width:18%"></div></div><div class="m-score">0.5/4</div></div>
+      <div class="maturity-row"><div class="m-label">EOL software management</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Network device patching</div><div class="m-bar"><div class="m-fill red" style="width:12%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Remediation tracking</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+    </div>
+
+    <div class="report-footer">
+      <span class="fw-cite">ISO 27001:2022</span><span class="fw-cite">NIST CSF 2.0</span><span class="fw-cite">CIS Controls v8</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== REPORT 5 ===================== -->
+<div class="overlay" id="r5">
+<div class="report-wrap">
+  <div class="back-btn" onclick="closeReport('r5')">&#8592; Back to Audit Reports</div>
+
+  <div class="report-header">
+    <div class="rh-top">
+      <span class="rh-type">Governance Review</span>
+      <span class="rh-meta">Report Ref: MCG-GRC-005 &nbsp;|&nbsp; May 2026</span>
+    </div>
+    <h1>Security Governance & Policy Framework Review</h1>
+    <p class="subtitle">Subject organization: Meridian Consulting Group. This review assessed the completeness of the organization's security policy framework, staff awareness training, and third-party vendor management practices against ISO 27001 and NIST CSF governance requirements.</p>
+    <div class="rh-grid">
+      <div class="rh-stat"><span>Overall Risk</span><strong style="color:var(--warning)">Medium</strong></div>
+      <div class="rh-stat"><span>Findings</span><strong>4</strong></div>
+      <div class="rh-stat"><span>Frameworks</span><strong>NIST · ISO</strong></div>
+      <div class="rh-stat"><span>Review Period</span><strong>Q1 2026</strong></div>
+    </div>
+  </div>
+
+  <div class="report-body">
+
+    <div class="exec-box">
+      <h3>Executive Summary</h3>
+      <p>Meridian Consulting Group operates without a formal security policy framework. No documented policies exist for information security, acceptable use, or incident response. Staff have not received security awareness training in the past 12 months. Third-party vendors with access to company systems or data are not subject to any formal review or contractual security requirements. The overall risk is rated <strong>Medium</strong>. While policy gaps alone do not create immediate technical risk, they underpin the failure of nearly every other control area reviewed in this audit series.</p>
+    </div>
+
+    <h2 class="section-h">1. Audit Scope and Methodology</h2>
+    <table class="scope-table">
+      <tr><td>Areas Reviewed</td><td>Security policy inventory, staff training records, vendor/supplier list and contracts, incident response readiness</td></tr>
+      <tr><td>Review Method</td><td>Document request and review, interview with office manager and one department lead, vendor contract sample review</td></tr>
+      <tr><td>Framework Alignment</td><td>NIST CSF 2.0 (GV.OC, GV.PO, GV.RM), ISO 27001:2022 Clause 5, Annex A.5.1, A.6.3, A.5.19, A.5.23</td></tr>
+    </table>
+
+    <h2 class="section-h">2. Findings</h2>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-001</span>
+        <span class="finding-title">No information security policies exist</span>
+        <span class="risk-pill risk-high">High</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>The organization has no documented information security policy, acceptable use policy, password policy, or data handling guidance. When asked about security expectations, staff responses varied significantly — indicating that security responsibilities are understood differently across the team, if at all.</p>
+        <span class="f-label">Risk</span>
+        <p>Without documented policies, there is no baseline against which employee behavior can be measured, no standard for auditors to test controls against, and no defensible governance position if a breach occurs. Policies are the directive control layer that all other controls depend on for legitimacy.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.1</span> <span class="fw-cite">NIST CSF GV.PO-01</span> <span class="fw-cite">CIS Control 0 (Foundation)</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-002</span>
+        <span class="finding-title">No security awareness training delivered in past 12 months</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>No security awareness training records exist. Staff have not received phishing simulation, email security guidance, or any documented security training. Two staff members interviewed were unfamiliar with the concept of social engineering or how to identify a phishing attempt.</p>
+        <span class="f-label">Risk</span>
+        <p>Human error and phishing remain the leading initial access vectors for small business breaches. An untrained workforce is particularly vulnerable in a cloud-first environment where a single credential compromise can expose all company data.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.6.3</span> <span class="fw-cite">NIST CSF GV.OC-03</span> <span class="fw-cite">CIS Control 14.1</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-003</span>
+        <span class="finding-title">Vendors with system access are not subject to security requirements</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>Meridian uses three third-party vendors that have direct or administrative access to company systems: a managed service provider, a cloud-based HR platform, and an external bookkeeper with access to financial software. No vendor security questionnaire, contract security clause, or access review process exists for any of these relationships.</p>
+        <span class="f-label">Risk</span>
+        <p>Third-party access represents a trust extension. A compromise at any of these vendors could provide unauthorized access to Meridian systems or data. Without contractual security requirements, the organization has no enforceable standard and no recourse if a vendor incident results in a breach.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.19</span> <span class="fw-cite">ISO 27001 A.5.23</span> <span class="fw-cite">NIST CSF GV.SC-06</span> <span class="fw-cite">CIS Control 15.1</span></p>
+      </div>
+    </div>
+
+    <div class="finding">
+      <div class="finding-header">
+        <span class="finding-id">F-004</span>
+        <span class="finding-title">No incident response plan or documented response contacts</span>
+        <span class="risk-pill risk-med">Medium</span>
+      </div>
+      <div class="finding-body">
+        <span class="f-label">Observation</span>
+        <p>No incident response plan exists. When asked what they would do if they believed their email account was compromised, two of three staff members interviewed said they were unsure who to contact. No escalation path, response procedure, or contact list is documented or distributed.</p>
+        <span class="f-label">Risk</span>
+        <p>Response time in the first hours of an incident has a direct relationship with containment effectiveness. An organization without a plan — or even a contact list — will lose critical time while determining how to respond. This directly extends the impact window of any incident.</p>
+        <span class="f-label">Framework Citations</span>
+        <p><span class="fw-cite">ISO 27001 A.5.25</span> <span class="fw-cite">NIST CSF RS.MA-01</span> <span class="fw-cite">CIS Control 17.1</span></p>
+      </div>
+    </div>
+
+    <h2 class="section-h">3. Recommendations</h2>
+    <table class="rec-table">
+      <thead><tr><th>Recommendation</th><th>Priority</th><th>Owner</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>Draft and distribute a one-page Information Security Policy covering acceptable use, passwords, data handling, and incident reporting. All staff acknowledge in writing.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager</td><td>Low — template-based</td></tr>
+        <tr><td>Enroll staff in a low-cost annual security awareness training platform (examples: KnowBe4 Free, Proofpoint Security Awareness, Microsoft Training). Track completion.</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager</td><td>Low–Medium — cost varies</td></tr>
+        <tr><td>Add a basic security clause to vendor contracts for all vendors with system access, and send a short security questionnaire to each. Review responses annually.</td><td><span class="pri-badge pri-90">90 Days</span></td><td>Office Manager</td><td>Medium — legal review advised</td></tr>
+        <tr><td>Create a one-page Incident Response Contact Sheet and distribute to all staff. Include: who to call, what to do immediately, and what not to do (e.g., do not delete emails).</td><td><span class="pri-badge pri-30">30 Days</span></td><td>Office Manager + MSP</td><td>Low — 2–3 hours</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p><strong>Analyst note:</strong> The four findings in this report are governance-layer gaps. Individually, they are rated Medium. Collectively, they represent the root cause of many of the High-risk findings identified across this audit series. Technical controls cannot be consistently maintained without the policy and ownership structures that governance provides. Remediating this report's findings will increase the effectiveness of every other remediation activity in this audit program.</p>
+    </div>
+
+    <h2 class="section-h">4. Control Maturity Assessment</h2>
+    <div style="margin-top:14px;">
+      <div class="maturity-row"><div class="m-label">Security policy framework</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Security awareness training</div><div class="m-bar"><div class="m-fill red" style="width:5%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Vendor/supplier management</div><div class="m-bar"><div class="m-fill red" style="width:10%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Incident response readiness</div><div class="m-bar"><div class="m-fill red" style="width:8%"></div></div><div class="m-score">0/4</div></div>
+      <div class="maturity-row"><div class="m-label">Governance ownership</div><div class="m-bar"><div class="m-fill amber" style="width:22%"></div></div><div class="m-score">0.5/4</div></div>
+    </div>
+
+    <div class="report-footer">
+      <span class="fw-cite">ISO 27001:2022</span><span class="fw-cite">NIST CSF 2.0</span><span class="fw-cite">CIS Controls v8</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div class="container">
+    © 2026 Richard Vincent · GRC & Cybersecurity Portfolio · <a href="index.html" style="color:var(--accent-2)">Back to Portfolio</a>
+  </div>
+</footer>
+
+<script>
+  function openReport(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById(id).scrollTop = 0;
+  }
+  function closeReport(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.overlay.open').forEach(function(o) {
+        o.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    }
+  });
+</script>
+</body>
+</html>
